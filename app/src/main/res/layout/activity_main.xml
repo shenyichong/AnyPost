@@ -22,15 +22,24 @@
         android:layout_height="wrap_content"
         android:text="@string/button_publish"
         android:id="@+id/button"
-        android:layout_marginTop="58dp"
-        android:layout_below="@+id/editText"
-        android:layout_alignRight="@+id/editText"
-        android:layout_alignEnd="@+id/editText"
+        android:layout_marginTop="54dp"
         android:textSize="@dimen/abc_action_bar_content_inset_material"
-        android:layout_alignParentEnd="true"
         android:clickable="true"
         android:elegantTextHeight="false"
-        android:onClick="publish_function" />
+        android:onClick="publish_function"
+        android:layout_below="@+id/imageButton"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true" />
+
+    <ImageButton
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/weibo_button"
+        android:layout_below="@+id/editText"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:contentDescription="weibo_icon"
+        android:src="@drawable/ic_logo" />
 
 
 </RelativeLayout>
