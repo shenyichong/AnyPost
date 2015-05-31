@@ -26,7 +26,11 @@
         android:layout_below="@+id/editText"
         android:layout_alignRight="@+id/editText"
         android:layout_alignEnd="@+id/editText"
-        android:textSize="@dimen/abc_action_bar_content_inset_material" />
+        android:textSize="@dimen/abc_action_bar_content_inset_material"
+        android:layout_alignParentEnd="true"
+        android:clickable="true"
+        android:elegantTextHeight="false"
+        android:onClick="publish_function" />
 
 
 </RelativeLayout>
