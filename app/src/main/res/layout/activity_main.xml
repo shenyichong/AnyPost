@@ -21,13 +21,11 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/button_publish"
-        android:id="@+id/button"
+        android:id="@+id/share_button"
         android:layout_marginTop="54dp"
         android:textSize="@dimen/abc_action_bar_content_inset_material"
         android:clickable="true"
         android:elegantTextHeight="false"
-        android:onClick="publish_function"
-        android:layout_below="@+id/imageButton"
         android:layout_alignParentRight="true"
         android:layout_alignParentEnd="true" />
 
