@@ -33,11 +33,12 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:id="@+id/weibo_button"
-        android:layout_below="@+id/editText"
+        android:contentDescription="weibo_icon"
+        android:background="@drawable/com_sina_weibo_sdk_login_button_with_original_logo"
+        android:layout_alignTop="@+id/share_button"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
-        android:contentDescription="weibo_icon"
-        android:src="@drawable/ic_logo" />
+        android:layout_marginStart="10dp" />
 
 
 </RelativeLayout>

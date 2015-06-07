@@ -27,9 +27,15 @@ import com.sina.weibo.sdk.auth.WeiboAuthListener;
 import com.sina.weibo.sdk.auth.sso.SsoHandler;
 import com.sina.weibo.sdk.constant.WBConstants;
 import com.sina.weibo.sdk.exception.WeiboException;
+import com.sina.weibo.sdk.net.RequestListener;
+import com.sina.weibo.sdk.openapi.StatusesAPI;
+import com.sina.weibo.sdk.openapi.models.ErrorInfo;
+import com.sina.weibo.sdk.openapi.models.Status;
+import com.sina.weibo.sdk.openapi.models.StatusList;
+import com.sina.weibo.sdk.utils.LogUtil;
 
 public class MainActivity extends Activity implements View.OnClickListener, IWeiboHandler.Response {
-
+    private static final String TAG = MainActivity.class.getName();
     public static final String KEY_SHARE_TYPE = "key_share_type";
     public static final int SHARE_CLIENT = 1;
     public static final int SHARE_ALL_IN_ONE = 2;
@@ -49,6 +55,9 @@ public class MainActivity extends Activity implements View.OnClickListener, IWei
     private EditText editText;
     /** 分享按钮 */
     private Button          mSharedBtn;
+
+    /** 用于获取微博信息流等操作的API */
+    private StatusesAPI mStatusesAPI;   //open API to update status
 
     /**
      * 注意：SsoHandler 仅当 SDK 支持 SSO 时有效
@@ -81,6 +90,12 @@ public class MainActivity extends Activity implements View.OnClickListener, IWei
                 mSsoHandler.authorizeClientSso(new AuthListener());
             }
         });
+
+        mAccessToken = AccessTokenKeeper.readAccessToken(this);
+        if (mAccessToken != null && mAccessToken.isSessionValid()){
+            // 对statusAPI实例化
+            mStatusesAPI = new StatusesAPI(this, Constants.APP_KEY, mAccessToken);
+        }
 
     }
 
@@ -143,6 +158,7 @@ public class MainActivity extends Activity implements View.OnClickListener, IWei
                 AccessTokenKeeper.writeAccessToken(MainActivity.this, mAccessToken);
                 Toast.makeText(MainActivity.this,
                         R.string.weibosdk_demo_toast_auth_success, Toast.LENGTH_SHORT).show();
+
             } else {
                 // 以下几种情况，您会收到 Code：
                 // 1. 当您未在平台上注册的应用程序的包名与签名时；
@@ -177,9 +193,44 @@ public class MainActivity extends Activity implements View.OnClickListener, IWei
     @Override
     public void onClick(View v) {
         if (R.id.share_button == v.getId()) {
-            sendMultiMessage(true, true);
+           // sendMultiMessage(true, true); //使用微博发博器进行微博发送
+            mStatusesAPI.update(editText.getText().toString(), null, null, mListener);
         }
     }
+    /**
+     * 微博 OpenAPI 回调接口。
+     */
+    private RequestListener mListener = new RequestListener() {
+        @Override
+        public void onComplete(String response) {
+            if (!TextUtils.isEmpty(response)) {
+                LogUtil.i(TAG, response);
+                if (response.startsWith("{\"statuses\"")) {
+                    // 调用 StatusList#parse 解析字符串成微博列表对象
+                    StatusList statuses = StatusList.parse(response);
+                    if (statuses != null && statuses.total_number > 0) {
+                        Toast.makeText(MainActivity.this,
+                                "获取微博信息流成功, 条数: " + statuses.statusList.size(),
+                                Toast.LENGTH_LONG).show();
+                    }
+                } else if (response.startsWith("{\"created_at\"")) {
+                    // 调用 Status#parse 解析字符串成微博对象
+                    Status status = Status.parse(response);
+                    Toast.makeText(MainActivity.this,
+                            "发送一送微博成功, id = " + status.id,
+                            Toast.LENGTH_LONG).show();
+                } else {
+                    Toast.makeText(MainActivity.this, response, Toast.LENGTH_LONG).show();
+                }
+            }
+        }
+        @Override
+        public void onWeiboException(WeiboException e) {
+            LogUtil.e(TAG, e.getMessage());
+            ErrorInfo info = ErrorInfo.parse(e.getMessage());
+            Toast.makeText(MainActivity.this, info.toString(), Toast.LENGTH_LONG).show();
+        }
+    };
 
     /**
      * 创建文本消息对象。
