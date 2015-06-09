@@ -20,14 +20,24 @@
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:text="@string/image_select"
+        android:id="@+id/image_select_button"
+        android:layout_below="@+id/editText"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true" />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:text="@string/button_publish"
         android:id="@+id/share_button"
-        android:layout_marginTop="54dp"
         android:textSize="@dimen/abc_action_bar_content_inset_material"
         android:clickable="true"
         android:elegantTextHeight="false"
-        android:layout_alignParentRight="true"
-        android:layout_alignParentEnd="true" />
+        android:layout_marginBottom="99dp"
+        android:layout_alignParentBottom="true"
+        android:layout_alignRight="@+id/horizontalScrollView"
+        android:layout_alignEnd="@+id/horizontalScrollView" />
 
     <ImageButton
         android:layout_width="wrap_content"
@@ -39,6 +49,21 @@
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
         android:layout_marginStart="10dp" />
+
+    <HorizontalScrollView
+        android:layout_width="match_parent"
+        android:layout_height="100dp"
+        android:id="@+id/horizontalScrollView"
+        android:layout_below="@+id/image_select_button"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:layout_above="@+id/share_button" >
+
+        <ImageView
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/imageView" />
+    </HorizontalScrollView>
 
 
 </RelativeLayout>
