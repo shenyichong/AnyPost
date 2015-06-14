@@ -7,7 +7,9 @@ import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.text.Editable;
 import android.text.TextUtils;
+import android.text.TextWatcher;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -16,6 +18,8 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Toast;
 
+import com.nostra13.universalimageloader.core.ImageLoader;
+import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
 import com.sina.weibo.sdk.api.TextObject;
 import com.sina.weibo.sdk.api.share.IWeiboShareAPI;
 import com.sina.weibo.sdk.api.share.WeiboShareSDK;
@@ -34,11 +38,11 @@ import com.sina.weibo.sdk.utils.LogUtil;
 //public class MainActivity extends Activity implements View.OnClickListener, IWeiboHandler.Response {
 public class MainActivity extends Activity implements View.OnClickListener{
 
-    private static int RESULT_LOAD_IMAGE = 10;
     private static final String TAG = MainActivity.class.getName();
     public static final String KEY_SHARE_TYPE = "key_share_type";
     public static final int SHARE_CLIENT = 1;
 //    public static final int SHARE_ALL_IN_ONE = 2;
+    private static int RESULT_LOAD_IMAGE = 3;
 
 
     private AuthInfo mAuthInfo;
@@ -75,6 +79,7 @@ public class MainActivity extends Activity implements View.OnClickListener{
         mImageSelectBtn = (Button)findViewById(R.id.image_select_button);
         mSharedBtn.setOnClickListener(this);
         mImageSelectBtn.setOnClickListener(this);
+        mSharedBtn.setEnabled(false);
 
         editText = (EditText) findViewById(R.id.editText);
 //        mImageView = (ImageView) findViewById(R.id.weibo_button);
@@ -98,6 +103,25 @@ public class MainActivity extends Activity implements View.OnClickListener{
         // 获取当前已保存过的 Token
         mAccessToken = AccessTokenKeeper.readAccessToken(this);
 
+        // Watch EditText
+        editText.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {}
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                if("".equals(editText.getText().toString().trim())) //if(editText.getText().toString().trim().isEmpty())
+                    mSharedBtn.setEnabled(false);
+                else
+                    mSharedBtn.setEnabled(true);
+            }
+        });
+
+        //code from Open Scource Project Android_Universal_Image_Loader
+        ImageLoaderConfiguration config = new ImageLoaderConfiguration.Builder(this).build();
+        ImageLoader.getInstance().init(config);
     }
 
 
