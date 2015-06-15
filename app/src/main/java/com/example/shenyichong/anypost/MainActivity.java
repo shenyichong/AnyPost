@@ -1,18 +1,24 @@
 package com.example.shenyichong.anypost;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.support.v4.view.GestureDetectorCompat;
 import android.text.Editable;
 import android.text.TextUtils;
 import android.text.TextWatcher;
+import android.util.Log;
+import android.view.GestureDetector;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -36,7 +42,10 @@ import com.sina.weibo.sdk.openapi.models.StatusList;
 import com.sina.weibo.sdk.utils.LogUtil;
 
 //public class MainActivity extends Activity implements View.OnClickListener, IWeiboHandler.Response {
-public class MainActivity extends Activity implements View.OnClickListener{
+public class MainActivity extends Activity implements
+                                        View.OnClickListener,
+                                        GestureDetector.OnGestureListener,
+                                        GestureDetector.OnDoubleTapListener{
 
     private static final String TAG = MainActivity.class.getName();
     public static final String KEY_SHARE_TYPE = "key_share_type";
@@ -64,6 +73,11 @@ public class MainActivity extends Activity implements View.OnClickListener{
     /** 用于获取微博信息流等操作的API */
     private StatusesAPI mStatusesAPI;   //open API to update status
 
+    //used to detect Gestures
+    private static final String DEBUG_TAG = "Gestures";
+    private GestureDetectorCompat mDetector;
+    //used to evoke keyboard when double taped
+    private InputMethodManager imm;
     /**
      * 注意：SsoHandler 仅当 SDK 支持 SSO 时有效
      */
@@ -118,12 +132,77 @@ public class MainActivity extends Activity implements View.OnClickListener{
                     mSharedBtn.setEnabled(true);
             }
         });
+        //support double tap to evoke keyboard.
+        mDetector = new GestureDetectorCompat(this,this);
+        mDetector.setOnDoubleTapListener(this);
+        imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
 
         //code from Open Scource Project Android_Universal_Image_Loader
         ImageLoaderConfiguration config = new ImageLoaderConfiguration.Builder(this).build();
         ImageLoader.getInstance().init(config);
     }
+    @Override
+    public boolean onTouchEvent(MotionEvent event){
+        this.mDetector.onTouchEvent(event);
+        // Be sure to call the superclass implementation
+        return super.onTouchEvent(event);
+    }
 
+    @Override
+    public boolean onDown(MotionEvent event) {
+        Log.d(DEBUG_TAG,"onDown: " + event.toString());
+        return true;
+    }
+
+    @Override
+    public boolean onFling(MotionEvent event1, MotionEvent event2,
+                           float velocityX, float velocityY) {
+        Log.d(DEBUG_TAG, "onFling: " + event1.toString()+event2.toString());
+        return true;
+    }
+
+    @Override
+    public void onLongPress(MotionEvent event) {
+        Log.d(DEBUG_TAG, "onLongPress: " + event.toString());
+    }
+
+    @Override
+    public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX,
+                            float distanceY) {
+        Log.d(DEBUG_TAG, "onScroll: " + e1.toString()+e2.toString());
+        return true;
+    }
+
+    @Override
+    public void onShowPress(MotionEvent event) {
+        Log.d(DEBUG_TAG, "onShowPress: " + event.toString());
+    }
+
+    @Override
+    public boolean onSingleTapUp(MotionEvent event) {
+        Log.d(DEBUG_TAG, "onSingleTapUp: " + event.toString());
+        return true;
+    }
+
+    @Override
+    public boolean onDoubleTap(MotionEvent event) {
+        Log.d(DEBUG_TAG, "onDoubleTap: " + event.toString());
+        //evoke keyboard
+        imm.showSoftInput(editText,InputMethodManager.SHOW_FORCED);
+        return true;
+    }
+
+    @Override
+    public boolean onDoubleTapEvent(MotionEvent event) {
+        Log.d(DEBUG_TAG, "onDoubleTapEvent: " + event.toString());
+        return true;
+    }
+
+    @Override
+    public boolean onSingleTapConfirmed(MotionEvent event) {
+        Log.d(DEBUG_TAG, "onSingleTapConfirmed: " + event.toString());
+        return true;
+    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
