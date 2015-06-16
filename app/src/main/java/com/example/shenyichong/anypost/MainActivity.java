@@ -43,16 +43,13 @@ import com.sina.weibo.sdk.utils.LogUtil;
 
 //public class MainActivity extends Activity implements View.OnClickListener, IWeiboHandler.Response {
 public class MainActivity extends Activity implements
-                                        View.OnClickListener,
-                                        GestureDetector.OnGestureListener,
-                                        GestureDetector.OnDoubleTapListener{
+                                        View.OnClickListener{
 
     private static final String TAG = MainActivity.class.getName();
     public static final String KEY_SHARE_TYPE = "key_share_type";
     public static final int SHARE_CLIENT = 1;
 //    public static final int SHARE_ALL_IN_ONE = 2;
     private static int RESULT_LOAD_IMAGE = 3;
-
 
     private AuthInfo mAuthInfo;
     /** 显示认证后的信息，如 AccessToken */
@@ -74,7 +71,6 @@ public class MainActivity extends Activity implements
     private StatusesAPI mStatusesAPI;   //open API to update status
 
     //used to detect Gestures
-    private static final String DEBUG_TAG = "Gestures";
     private GestureDetectorCompat mDetector;
     //used to evoke keyboard when double taped
     private InputMethodManager imm;
@@ -133,9 +129,9 @@ public class MainActivity extends Activity implements
             }
         });
         //support double tap to evoke keyboard.
-        mDetector = new GestureDetectorCompat(this,this);
-        mDetector.setOnDoubleTapListener(this);
+        mDetector = new GestureDetectorCompat(this,new MyGestureListener());
         imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+
 
         //code from Open Scource Project Android_Universal_Image_Loader
         ImageLoaderConfiguration config = new ImageLoaderConfiguration.Builder(this).build();
@@ -148,61 +144,26 @@ public class MainActivity extends Activity implements
         return super.onTouchEvent(event);
     }
 
-    @Override
-    public boolean onDown(MotionEvent event) {
-        Log.d(DEBUG_TAG,"onDown: " + event.toString());
-        return true;
+    //class used to Implement GestureListener
+    class MyGestureListener extends GestureDetector.SimpleOnGestureListener {
+        private static final String DEBUG_TAG = "Gestures";
+
+        @Override
+        public boolean onDown(MotionEvent event) {
+            Log.d(DEBUG_TAG,"onDown: " + event.toString());
+            return true;
+        }
+
+        @Override
+        public boolean onDoubleTap(MotionEvent event) {
+            Log.d(DEBUG_TAG, "onDoubleTap: " + event.toString());
+            //evoke keyboard
+            imm.showSoftInput(editText, InputMethodManager.SHOW_FORCED);
+            return true;
+        }
     }
 
-    @Override
-    public boolean onFling(MotionEvent event1, MotionEvent event2,
-                           float velocityX, float velocityY) {
-        Log.d(DEBUG_TAG, "onFling: " + event1.toString()+event2.toString());
-        return true;
-    }
 
-    @Override
-    public void onLongPress(MotionEvent event) {
-        Log.d(DEBUG_TAG, "onLongPress: " + event.toString());
-    }
-
-    @Override
-    public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX,
-                            float distanceY) {
-        Log.d(DEBUG_TAG, "onScroll: " + e1.toString()+e2.toString());
-        return true;
-    }
-
-    @Override
-    public void onShowPress(MotionEvent event) {
-        Log.d(DEBUG_TAG, "onShowPress: " + event.toString());
-    }
-
-    @Override
-    public boolean onSingleTapUp(MotionEvent event) {
-        Log.d(DEBUG_TAG, "onSingleTapUp: " + event.toString());
-        return true;
-    }
-
-    @Override
-    public boolean onDoubleTap(MotionEvent event) {
-        Log.d(DEBUG_TAG, "onDoubleTap: " + event.toString());
-        //evoke keyboard
-        imm.showSoftInput(editText,InputMethodManager.SHOW_FORCED);
-        return true;
-    }
-
-    @Override
-    public boolean onDoubleTapEvent(MotionEvent event) {
-        Log.d(DEBUG_TAG, "onDoubleTapEvent: " + event.toString());
-        return true;
-    }
-
-    @Override
-    public boolean onSingleTapConfirmed(MotionEvent event) {
-        Log.d(DEBUG_TAG, "onSingleTapConfirmed: " + event.toString());
-        return true;
-    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
