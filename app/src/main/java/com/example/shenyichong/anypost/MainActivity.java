@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.BitmapFactory;
+import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
@@ -60,8 +61,8 @@ public class MainActivity extends Activity implements
     private IWeiboShareAPI mWeiboShareAPI = null;
 
     private int mShareType = SHARE_CLIENT;
-//    /** 分享图片 */
-//    private ImageView mImageView;
+    /** 分享图片 */
+    private ImageView mImageView;
     private EditText editText;
     /** 分享按钮 */
     private Button          mSharedBtn;
@@ -92,7 +93,7 @@ public class MainActivity extends Activity implements
         mSharedBtn.setEnabled(false);
 
         editText = (EditText) findViewById(R.id.editText);
-//        mImageView = (ImageView) findViewById(R.id.weibo_button);
+        mImageView = (ImageView) findViewById(R.id.imageView);
 
         mShareType = getIntent().getIntExtra(KEY_SHARE_TYPE, SHARE_CLIENT);
         // 创建微博分享接口实例
@@ -107,7 +108,7 @@ public class MainActivity extends Activity implements
         findViewById(R.id.weibo_button).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mSsoHandler.authorizeClientSso(new AuthListener());
+                mSsoHandler.authorize(new AuthListener());
             }
         });
         // 获取当前已保存过的 Token
@@ -128,6 +129,7 @@ public class MainActivity extends Activity implements
                     mSharedBtn.setEnabled(true);
             }
         });
+
         //support double tap to evoke keyboard.
         mDetector = new GestureDetectorCompat(this,new MyGestureListener());
         imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
@@ -209,8 +211,7 @@ public class MainActivity extends Activity implements
             String picturePath = cursor.getString(columnIndex);
             cursor.close();
 
-            ImageView imageView = (ImageView) findViewById(R.id.imageView);
-            imageView.setImageBitmap(BitmapFactory.decodeFile(picturePath));
+            mImageView.setImageBitmap(BitmapFactory.decodeFile(picturePath));
             return;
         }
 
@@ -275,14 +276,20 @@ public class MainActivity extends Activity implements
     @Override
     public void onClick(View v) {
         if (R.id.share_button == v.getId()) {
-           // sendMultiMessage(true, true); //使用微博发博器进行微博发送
+            // sendMultiMessage(true, true); //使用微博发博器进行微博发送
 
             if(mAccessToken == null || mAccessToken.isSessionValid() == false){
                     Toast.makeText(MainActivity.this, "请先登陆微博", Toast.LENGTH_LONG).show();
                     return;
             }else
                     mStatusesAPI = new StatusesAPI(this, Constants.APP_KEY, mAccessToken);
-            mStatusesAPI.update(editText.getText().toString(), null, null, mListener);
+
+            if(mImageView.getDrawable() != null){
+                Toast.makeText(MainActivity.this, "test", Toast.LENGTH_LONG).show();
+                mStatusesAPI.upload(editText.getText().toString(), ((BitmapDrawable)mImageView.getDrawable()).getBitmap(), null, null, mListener);
+            }
+            else
+                mStatusesAPI.update(editText.getText().toString(), null, null, mListener);
         }
         else if(R.id.image_select_button == v.getId()){
             Intent i = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
