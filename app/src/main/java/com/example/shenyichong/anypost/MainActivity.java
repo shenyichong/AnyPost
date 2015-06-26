@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
+import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
@@ -63,6 +64,7 @@ public class MainActivity extends Activity implements
     private int mShareType = SHARE_CLIENT;
     /** 分享图片 */
     private ImageView mImageView;
+    private Uri electedImage_Uri;
     private EditText editText;
     /** 分享按钮 */
     private Button          mSharedBtn;
@@ -201,6 +203,7 @@ public class MainActivity extends Activity implements
 
         if (requestCode == RESULT_LOAD_IMAGE && resultCode == RESULT_OK && null != data) {
             Uri selectedImage = data.getData();
+            electedImage_Uri = selectedImage;
             String[] filePathColumn = { MediaStore.Images.Media.DATA };
 
             Cursor cursor = getContentResolver().query(selectedImage,
@@ -210,8 +213,19 @@ public class MainActivity extends Activity implements
             int columnIndex = cursor.getColumnIndex(filePathColumn[0]);
             String picturePath = cursor.getString(columnIndex);
             cursor.close();
-
-            mImageView.setImageBitmap(BitmapFactory.decodeFile(picturePath));
+            //设置图片尺寸，防止图片过大无法显示
+            BitmapFactory.Options options = new BitmapFactory.Options();
+            options.inJustDecodeBounds = true;
+            Bitmap Image = BitmapFactory.decodeFile(picturePath,options);
+            options.inSampleSize = 1;
+            //while(options.outHeight > 4096 || options.outWidth > 4096){   //为什么使用while有时会卡顿，并且导致程序无响应？
+            if(options.outHeight > 4096 || options.outWidth > 4096){
+                options.inSampleSize *= 2;
+            }
+            //后续可以根据layout设置固定尺寸
+            options.inJustDecodeBounds = false;
+            Image = BitmapFactory.decodeFile(picturePath,options);
+            mImageView.setImageBitmap(Image);
             return;
         }
 
@@ -284,11 +298,13 @@ public class MainActivity extends Activity implements
             }else
                     mStatusesAPI = new StatusesAPI(this, Constants.APP_KEY, mAccessToken);
 
-            if(mImageView.getDrawable() != null){
-                Toast.makeText(MainActivity.this, "test", Toast.LENGTH_LONG).show();
+            if(mImageView.getDrawable() != null)
+                //发送图片微博
                 mStatusesAPI.upload(editText.getText().toString(), ((BitmapDrawable)mImageView.getDrawable()).getBitmap(), null, null, mListener);
-            }
+                // 如何发送原图到微博？ http://stackoverflow.com/questions/3879992/get-bitmap-from-an-uri-android
+                // mStatusesAPI.upload(editText.getText().toString(), getThumbnail(electedImage_Uri) , null, null, mListener);
             else
+                //发送文字微博
                 mStatusesAPI.update(editText.getText().toString(), null, null, mListener);
         }
         else if(R.id.image_select_button == v.getId()){
