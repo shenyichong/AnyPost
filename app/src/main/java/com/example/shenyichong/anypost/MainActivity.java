@@ -1,6 +1,7 @@
 package com.example.shenyichong.anypost;
 
 import android.app.Activity;
+import android.app.NotificationManager;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
@@ -10,6 +11,7 @@ import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.support.v4.app.NotificationCompat;
 import android.support.v4.view.GestureDetectorCompat;
 import android.text.Editable;
 import android.text.TextUtils;
@@ -28,7 +30,6 @@ import android.widget.Toast;
 
 import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
-import com.sina.weibo.sdk.api.TextObject;
 import com.sina.weibo.sdk.api.share.IWeiboShareAPI;
 import com.sina.weibo.sdk.api.share.WeiboShareSDK;
 import com.sina.weibo.sdk.auth.AuthInfo;
@@ -43,6 +44,7 @@ import com.sina.weibo.sdk.openapi.models.Status;
 import com.sina.weibo.sdk.openapi.models.StatusList;
 import com.sina.weibo.sdk.utils.LogUtil;
 
+
 //public class MainActivity extends Activity implements View.OnClickListener, IWeiboHandler.Response {
 public class MainActivity extends Activity implements
                                         View.OnClickListener{
@@ -52,6 +54,8 @@ public class MainActivity extends Activity implements
     public static final int SHARE_CLIENT = 1;
 //    public static final int SHARE_ALL_IN_ONE = 2;
     private static int RESULT_LOAD_IMAGE = 3;
+    private static int MID_PRE = 10;
+    private static int MID_POST = 11;
 
     private AuthInfo mAuthInfo;
     /** 显示认证后的信息，如 AccessToken */
@@ -64,7 +68,11 @@ public class MainActivity extends Activity implements
     private int mShareType = SHARE_CLIENT;
     /** 分享图片 */
     private ImageView mImageView;
-    private Uri electedImage_Uri;
+    private int mSampleSize;
+    private int mHeight;
+    private int mWidth;
+
+    //private Uri electedImage_Uri;
     private EditText editText;
     /** 分享按钮 */
     private Button          mSharedBtn;
@@ -203,7 +211,7 @@ public class MainActivity extends Activity implements
 
         if (requestCode == RESULT_LOAD_IMAGE && resultCode == RESULT_OK && null != data) {
             Uri selectedImage = data.getData();
-            electedImage_Uri = selectedImage;
+            //electedImage_Uri = selectedImage;
             String[] filePathColumn = { MediaStore.Images.Media.DATA };
 
             Cursor cursor = getContentResolver().query(selectedImage,
@@ -217,11 +225,14 @@ public class MainActivity extends Activity implements
             BitmapFactory.Options options = new BitmapFactory.Options();
             options.inJustDecodeBounds = true;
             Bitmap Image = BitmapFactory.decodeFile(picturePath,options);
-            options.inSampleSize = 1;
-            //while(options.outHeight > 4096 || options.outWidth > 4096){   //为什么使用while有时会卡顿，并且导致程序无响应？
-            if(options.outHeight > 4096 || options.outWidth > 4096){
-                options.inSampleSize *= 2;
+            mSampleSize = 1;
+            mHeight = options.outHeight;
+            mWidth  = options.outWidth;
+            while(mHeight > 4096 || mWidth > 4096){
+                mHeight /= 2; mWidth /= 2;
+                mSampleSize *= 2;
             }
+            options.inSampleSize = mSampleSize;
             //后续可以根据layout设置固定尺寸
             options.inJustDecodeBounds = false;
             Image = BitmapFactory.decodeFile(picturePath,options);
@@ -293,7 +304,7 @@ public class MainActivity extends Activity implements
             // sendMultiMessage(true, true); //使用微博发博器进行微博发送
 
             if(mAccessToken == null || mAccessToken.isSessionValid() == false){
-                    Toast.makeText(MainActivity.this, "请先登陆微博", Toast.LENGTH_LONG).show();
+                    Toast.makeText(MainActivity.this, R.string.please_logon_weibo, Toast.LENGTH_LONG).show();
                     return;
             }else
                     mStatusesAPI = new StatusesAPI(this, Constants.APP_KEY, mAccessToken);
@@ -306,6 +317,21 @@ public class MainActivity extends Activity implements
             else
                 //发送文字微博
                 mStatusesAPI.update(editText.getText().toString(), null, null, mListener);
+
+            NotificationCompat.Builder mBuilder =
+                    new NotificationCompat.Builder(this)
+                            .setSmallIcon(R.drawable.ic_launcher)
+                            .setContentTitle(getString(R.string.publish_status))
+                            .setContentText(getString(R.string.publish_status));
+            //设定通知优先级
+            mBuilder.setPriority(NotificationCompat.PRIORITY_MAX);
+            //设定闪现提示语文字
+            mBuilder.setTicker(getString(R.string.publish_status));
+            //设定不能够被滑动删除
+            mBuilder.setOngoing(true);
+            NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+            // mId allows you to update the notification later on.
+            mNotificationManager.notify(MID_PRE,mBuilder.build());
         }
         else if(R.id.image_select_button == v.getId()){
             Intent i = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
@@ -329,11 +355,29 @@ public class MainActivity extends Activity implements
                                 Toast.LENGTH_LONG).show();
                     }
                 } else if (response.startsWith("{\"created_at\"")) {
+                    //通知栏显示AnyPost发送成功
+                    NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(MainActivity.this)
+                            .setSmallIcon(R.drawable.ic_launcher)
+                            .setContentTitle(getString(R.string.publish_status_done))
+                            .setContentText(getString(R.string.publish_status_done));;
+                    mBuilder.setTicker(getString(R.string.publish_status_done));
+                    NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+                    mNotificationManager.cancel(MID_PRE);
+                    mNotificationManager.notify(null, MID_POST, mBuilder.build());
+
                     // 调用 Status#parse 解析字符串成微博对象
                     Status status = Status.parse(response);
                     Toast.makeText(MainActivity.this,
                             "发送一送微博成功, id = " + status.id,
                             Toast.LENGTH_LONG).show();
+
+                    //通知栏显示1s后自动关闭
+                    try {
+                        Thread.currentThread().sleep(1000);//延时的时间，毫秒
+                    } catch (InterruptedException ee) {
+                        ee.printStackTrace();
+                    }
+                    mNotificationManager.cancel(MID_POST);
                 } else {
                     Toast.makeText(MainActivity.this, response, Toast.LENGTH_LONG).show();
                 }
@@ -341,122 +385,28 @@ public class MainActivity extends Activity implements
         }
         @Override
         public void onWeiboException(WeiboException e) {
+            //在通知栏显示AnyPost发布失败
+            NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(MainActivity.this)
+                    .setSmallIcon(R.drawable.ic_launcher)
+                    .setContentTitle(getString(R.string.publish_status_fail))
+                    .setContentText(getString(R.string.publish_status_fail));;
+            mBuilder.setTicker(getString(R.string.publish_status_fail));
+            NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+            mNotificationManager.cancel(MID_PRE);
+            mNotificationManager.notify(null, MID_POST, mBuilder.build());
+
             LogUtil.e(TAG, e.getMessage());
             ErrorInfo info = ErrorInfo.parse(e.getMessage());
             Toast.makeText(MainActivity.this, info.toString(), Toast.LENGTH_LONG).show();
+
+            //通知栏显示1s后自动关闭
+            try {
+                Thread.currentThread().sleep(1000);//延时的时间，毫秒
+            } catch (InterruptedException ee) {
+                ee.printStackTrace();
+            }
+            mNotificationManager.cancel(MID_POST);
         }
     };
-
-    /**
-     * 创建文本消息对象。
-     *
-     * @return 文本消息对象。
-     */
-    private TextObject getTextObj() {
-        TextObject textObject = new TextObject();
-        textObject.text = editText.getText().toString();
-        return textObject;
-    }
-
-//    /**
-//     * 创建图片消息对象。
-//     *
-//     * @return 图片消息对象。
-//     */
-//    private ImageObject getImageObj() {
-//        ImageObject imageObject = new ImageObject();
-//        BitmapDrawable bitmapDrawable = (BitmapDrawable) mImageView.getDrawable();
-//        imageObject.setImageObject(bitmapDrawable.getBitmap());
-//        return imageObject;
-//    }
-
-
-//    private void sendMultiMessage(boolean hasText, boolean hasImage) {
-//
-//        // 1. 初始化微博的分享消息
-//        WeiboMultiMessage weiboMessage = new WeiboMultiMessage();
-//        if (hasText) {
-//            weiboMessage.textObject = getTextObj();
-//        }
-//
-//        if (hasImage) {
-//            weiboMessage.imageObject = getImageObj();
-//        }
-//
-//        // 2. 初始化从第三方到微博的消息请求
-//        SendMultiMessageToWeiboRequest request = new SendMultiMessageToWeiboRequest();
-//        // 用transaction唯一标识一个请求
-//        request.transaction = String.valueOf(System.currentTimeMillis());
-//        request.multiMessage = weiboMessage;
-//
-//        // 3. 发送请求消息到微博，唤起微博分享界面
-//        if (mShareType == SHARE_CLIENT) {
-//            mWeiboShareAPI.sendRequest(MainActivity.this, request);
-//        }
-//        else if (mShareType == SHARE_ALL_IN_ONE) {
-//            AuthInfo authInfo = new AuthInfo(this, Constants.APP_KEY, Constants.REDIRECT_URL, Constants.SCOPE);
-//            Oauth2AccessToken accessToken = AccessTokenKeeper.readAccessToken(getApplicationContext());
-//            String token = "";
-//            if (accessToken != null) {
-//                token = accessToken.getToken();
-//            }
-//            mWeiboShareAPI.sendRequest(this, request, authInfo, token, new WeiboAuthListener() {
-//
-//                @Override
-//                public void onWeiboException( WeiboException arg0 ) {
-//                }
-//
-//                @Override
-//                public void onComplete( Bundle bundle ) {
-//                    // TODO Auto-generated method stub
-//                    Oauth2AccessToken newToken = Oauth2AccessToken.parseAccessToken(bundle);
-//                    AccessTokenKeeper.writeAccessToken(getApplicationContext(), newToken);
-//                    Toast.makeText(getApplicationContext(), "onAuthorizeComplete token = " + newToken.getToken(), Toast.LENGTH_LONG).show();
-//                }
-//
-//                @Override
-//                public void onCancel() {
-//                }
-//            });
-//        }
-//    }
-
-//    /**
-//     * 接收微客户端博请求的数据。
-//     * 当微博客户端唤起当前应用并进行分享时，该方法被调用。
-//     *
-//     * @param baseRequest 微博请求数据对象
-//     * @see {@link IWeiboShareAPI#handleWeiboRequest}
-//     */
-//    @Override
-//    public void onResponse(BaseResponse baseResp) {
-//        switch (baseResp.errCode) {
-//            case WBConstants.ErrorCode.ERR_OK:
-//                Toast.makeText(this, R.string.weibosdk_demo_toast_share_success, Toast.LENGTH_LONG).show();
-//                break;
-//            case WBConstants.ErrorCode.ERR_CANCEL:
-//                Toast.makeText(this, R.string.weibosdk_demo_toast_share_canceled, Toast.LENGTH_LONG).show();
-//                break;
-//            case WBConstants.ErrorCode.ERR_FAIL:
-//                Toast.makeText(this,
-//                        getString(R.string.weibosdk_demo_toast_share_failed) + "Error Message: " + baseResp.errMsg,
-//                        Toast.LENGTH_LONG).show();
-//                break;
-//        }
-//    }
-
-//    /**
-//     * @see {@link Activity#onNewIntent}
-//     */
-//    @Override
-//    protected void onNewIntent(Intent intent) {
-//        super.onNewIntent(intent);
-//
-//        // 从当前应用唤起微博并进行分享后，返回到当前应用时，需要在此处调用该函数
-//        // 来接收微博客户端返回的数据；执行成功，返回 true，并调用
-//        // {@link IWeiboHandler.Response#onResponse}；失败返回 false，不调用上述回调
-//        mWeiboShareAPI.handleWeiboResponse(intent, this);
-//    }
-
 
 }
