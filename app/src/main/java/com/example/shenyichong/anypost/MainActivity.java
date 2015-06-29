@@ -25,6 +25,7 @@ import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.Toast;
 
@@ -43,6 +44,11 @@ import com.sina.weibo.sdk.openapi.models.ErrorInfo;
 import com.sina.weibo.sdk.openapi.models.Status;
 import com.sina.weibo.sdk.openapi.models.StatusList;
 import com.sina.weibo.sdk.utils.LogUtil;
+import com.tencent.mm.sdk.modelmsg.SendMessageToWX;
+import com.tencent.mm.sdk.modelmsg.WXMediaMessage;
+import com.tencent.mm.sdk.modelmsg.WXTextObject;
+import com.tencent.mm.sdk.openapi.IWXAPI;
+import com.tencent.mm.sdk.openapi.WXAPIFactory;
 
 
 //public class MainActivity extends Activity implements View.OnClickListener, IWeiboHandler.Response {
@@ -64,8 +70,9 @@ public class MainActivity extends Activity implements
     private Oauth2AccessToken mAccessToken;
     /** 微博微博分享接口实例 */
     private IWeiboShareAPI mWeiboShareAPI = null;
+    /** IWXAPI 是第三方app与微信通信的openApi接口 */
+    private IWXAPI mWeixinAPI ;
 
-    private int mShareType = SHARE_CLIENT;
     /** 分享图片 */
     private ImageView mImageView;
     private int mSampleSize;
@@ -78,6 +85,8 @@ public class MainActivity extends Activity implements
     private Button          mSharedBtn;
     /** 图片选择按钮 */
     private Button          mImageSelectBtn;
+    //微信分享按钮
+    private ImageButton     mWeichatBtn;
     /** 用于获取微博信息流等操作的API */
     private StatusesAPI mStatusesAPI;   //open API to update status
 
@@ -102,10 +111,12 @@ public class MainActivity extends Activity implements
         mImageSelectBtn.setOnClickListener(this);
         mSharedBtn.setEnabled(false);
 
+        mWeichatBtn = (ImageButton) findViewById(R.id.weichatButton);
+        mWeichatBtn.setOnClickListener(this);
+
         editText = (EditText) findViewById(R.id.editText);
         mImageView = (ImageView) findViewById(R.id.imageView);
 
-        mShareType = getIntent().getIntExtra(KEY_SHARE_TYPE, SHARE_CLIENT);
         // 创建微博分享接口实例
         mWeiboShareAPI = WeiboShareSDK.createWeiboAPI(this, Constants.APP_KEY);
 
@@ -113,6 +124,11 @@ public class MainActivity extends Activity implements
         // 但该附件栏集成分享权限需要合作申请，详情请查看 Demo 提示
         // NOTE：请务必提前注册，即界面初始化的时候或是应用程序初始化时，进行注册
         mWeiboShareAPI.registerApp();
+
+        //通过WXAPIFactory工厂，获取IWXAPI实例
+        mWeixinAPI = WXAPIFactory.createWXAPI(this,Constants.APP_ID,true);
+        //将应用注册到微信
+        mWeixinAPI.registerApp(Constants.APP_ID);
 
         // SSO 授权, 仅客户端
         findViewById(R.id.weibo_button).setOnClickListener(new View.OnClickListener() {
@@ -336,6 +352,28 @@ public class MainActivity extends Activity implements
         else if(R.id.image_select_button == v.getId()){
             Intent i = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
             startActivityForResult(i, RESULT_LOAD_IMAGE);
+        }
+
+        else if(R.id.weichatButton == v.getId()){
+            // 初始化一个WXTextObject对象
+            WXTextObject textObj = new WXTextObject();
+            textObj.text = String.valueOf(editText.getText());
+
+            // 用WXTextObject对象初始化一个WXMediaMessage对象
+            WXMediaMessage msg = new WXMediaMessage();
+            msg.mediaObject = textObj;
+            // 发送文本类型的消息时，title字段不起作用
+            // msg.title = "Will be ignored";
+            msg.description = String.valueOf(editText.getText());
+
+            // 构造一个Req
+            SendMessageToWX.Req req = new SendMessageToWX.Req();
+            req.transaction = "text" + System.currentTimeMillis(); // transaction字段用于唯一标识一个请求
+            req.message = msg;
+            req.scene = SendMessageToWX.Req.WXSceneTimeline;
+
+            // 调用api接口发送数据到微信
+            mWeixinAPI.sendReq(req);
         }
     }
     /**
