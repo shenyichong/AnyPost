@@ -28,6 +28,7 @@ import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.Toast;
+import android.widget.ToggleButton;
 
 import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
@@ -45,10 +46,12 @@ import com.sina.weibo.sdk.openapi.models.Status;
 import com.sina.weibo.sdk.openapi.models.StatusList;
 import com.sina.weibo.sdk.utils.LogUtil;
 import com.tencent.mm.sdk.modelmsg.SendMessageToWX;
+import com.tencent.mm.sdk.modelmsg.WXImageObject;
 import com.tencent.mm.sdk.modelmsg.WXMediaMessage;
 import com.tencent.mm.sdk.modelmsg.WXTextObject;
 import com.tencent.mm.sdk.openapi.IWXAPI;
 import com.tencent.mm.sdk.openapi.WXAPIFactory;
+
 
 
 //public class MainActivity extends Activity implements View.OnClickListener, IWeiboHandler.Response {
@@ -111,7 +114,7 @@ public class MainActivity extends Activity implements
         mImageSelectBtn.setOnClickListener(this);
         mSharedBtn.setEnabled(false);
 
-        mWeichatBtn = (ImageButton) findViewById(R.id.weichatButton);
+        mWeichatBtn = (ImageButton) findViewById(R.id.wechatButton);
         mWeichatBtn.setOnClickListener(this);
 
         editText = (EditText) findViewById(R.id.editText);
@@ -318,7 +321,7 @@ public class MainActivity extends Activity implements
     public void onClick(View v) {
         if (R.id.share_button == v.getId()) {
             // sendMultiMessage(true, true); //使用微博发博器进行微博发送
-
+            //发送微博功能实现
             if(mAccessToken == null || mAccessToken.isSessionValid() == false){
                     Toast.makeText(MainActivity.this, R.string.please_logon_weibo, Toast.LENGTH_LONG).show();
                     return;
@@ -348,33 +351,56 @@ public class MainActivity extends Activity implements
             NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
             // mId allows you to update the notification later on.
             mNotificationManager.notify(MID_PRE,mBuilder.build());
+
+            if(((ToggleButton)findViewById(R.id.toggleButton_wechat)).isChecked() == true){
+                //实现微信发送朋友圈功能
+                if (mImageView.getDrawable() != null){
+                    //发送图片朋友圈
+                    Bitmap bmp = ((BitmapDrawable)mImageView.getDrawable()).getBitmap() ;
+                    WXImageObject imgObj = new WXImageObject(bmp);
+
+                    WXMediaMessage msg = new WXMediaMessage();
+                    msg.mediaObject = imgObj;
+                    //msg.title = String.valueOf(editText.getText());
+                    //msg.description = String.valueOf(editText.getText());
+
+                    Bitmap thumbBmp = Bitmap.createScaledBitmap(bmp, 150, 150, true);
+                    bmp.recycle();
+                    msg.thumbData = Util.bmpToByteArray(thumbBmp, true);  // 设置缩略图
+
+                    SendMessageToWX.Req req = new SendMessageToWX.Req();
+                    req.transaction = "img" + System.currentTimeMillis(); // transaction字段用于唯一标识一个请求
+                    req.message = msg;
+                    req.scene =  SendMessageToWX.Req.WXSceneTimeline;
+                    mWeixinAPI.sendReq(req);
+
+
+                }else{
+                    //发送文字朋友圈
+                    // 初始化一个WXTextObject对象
+                    WXTextObject textObj = new WXTextObject();
+                    textObj.text = String.valueOf(editText.getText());
+                    // 用WXTextObject对象初始化一个WXMediaMessage对象
+                    WXMediaMessage msg = new WXMediaMessage();
+                    msg.mediaObject = textObj;
+                    // 发送文本类型的消息时，title字段不起作用
+                    // msg.title = "Will be ignored";
+                    msg.description = String.valueOf(editText.getText());
+                    // 构造一个Req
+                    SendMessageToWX.Req req = new SendMessageToWX.Req();
+                    req.transaction = "text" + System.currentTimeMillis(); // transaction字段用于唯一标识一个请求
+                    req.message = msg;
+                    req.scene = SendMessageToWX.Req.WXSceneTimeline;
+                    // 调用api接口发送数据到微信
+                    mWeixinAPI.sendReq(req);
+                }
+            }
         }
         else if(R.id.image_select_button == v.getId()){
             Intent i = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
             startActivityForResult(i, RESULT_LOAD_IMAGE);
         }
 
-        else if(R.id.weichatButton == v.getId()){
-            // 初始化一个WXTextObject对象
-            WXTextObject textObj = new WXTextObject();
-            textObj.text = String.valueOf(editText.getText());
-
-            // 用WXTextObject对象初始化一个WXMediaMessage对象
-            WXMediaMessage msg = new WXMediaMessage();
-            msg.mediaObject = textObj;
-            // 发送文本类型的消息时，title字段不起作用
-            // msg.title = "Will be ignored";
-            msg.description = String.valueOf(editText.getText());
-
-            // 构造一个Req
-            SendMessageToWX.Req req = new SendMessageToWX.Req();
-            req.transaction = "text" + System.currentTimeMillis(); // transaction字段用于唯一标识一个请求
-            req.message = msg;
-            req.scene = SendMessageToWX.Req.WXSceneTimeline;
-
-            // 调用api接口发送数据到微信
-            mWeixinAPI.sendReq(req);
-        }
     }
     /**
      * 微博 OpenAPI 回调接口。
