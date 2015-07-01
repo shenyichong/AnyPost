@@ -351,31 +351,31 @@ public class MainActivity extends Activity implements
             NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
             // mId allows you to update the notification later on.
             mNotificationManager.notify(MID_PRE,mBuilder.build());
-
-            if(((ToggleButton)findViewById(R.id.toggleButton_wechat)).isChecked() == true){
+            if(((ToggleButton)findViewById(R.id.toggleButton_wechat)).isChecked() == true) {
                 //实现微信发送朋友圈功能
-                if (mImageView.getDrawable() != null){
+                if (mImageView.getDrawable() != null) {
                     //发送图片朋友圈
-                    Bitmap bmp = ((BitmapDrawable)mImageView.getDrawable()).getBitmap() ;
+                    Bitmap bmp = ((BitmapDrawable) mImageView.getDrawable()).getBitmap();
                     WXImageObject imgObj = new WXImageObject(bmp);
 
                     WXMediaMessage msg = new WXMediaMessage();
                     msg.mediaObject = imgObj;
-                    //msg.title = String.valueOf(editText.getText());
-                    //msg.description = String.valueOf(editText.getText());
 
                     Bitmap thumbBmp = Bitmap.createScaledBitmap(bmp, 150, 150, true);
-                    bmp.recycle();
+                    //bmp.recycle();
                     msg.thumbData = Util.bmpToByteArray(thumbBmp, true);  // 设置缩略图
+
+                    //msg.setThumbImage(bmp);
+                    msg.title = String.valueOf(editText.getText());
+                    msg.description = String.valueOf(editText.getText());
 
                     SendMessageToWX.Req req = new SendMessageToWX.Req();
                     req.transaction = "img" + System.currentTimeMillis(); // transaction字段用于唯一标识一个请求
                     req.message = msg;
-                    req.scene =  SendMessageToWX.Req.WXSceneTimeline;
+                    req.scene = SendMessageToWX.Req.WXSceneTimeline;
                     mWeixinAPI.sendReq(req);
 
-
-                }else{
+                } else {
                     //发送文字朋友圈
                     // 初始化一个WXTextObject对象
                     WXTextObject textObj = new WXTextObject();
@@ -399,6 +399,9 @@ public class MainActivity extends Activity implements
         else if(R.id.image_select_button == v.getId()){
             Intent i = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
             startActivityForResult(i, RESULT_LOAD_IMAGE);
+        }
+        else if(R.id.wechatButton == v.getId()){
+
         }
 
     }

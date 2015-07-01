@@ -1,8 +1,9 @@
 package com.example.shenyichong.anypost;
 
 import android.graphics.Bitmap;
-import android.graphics.Bitmap.CompressFormat;
 import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
+import android.graphics.Rect;
 import android.util.Log;
 
 import junit.framework.Assert;
@@ -22,21 +23,54 @@ public class Util {
     private static final String TAG = "SDK_Sample.Util";
 
     public static byte[] bmpToByteArray(final Bitmap bmp, final boolean needRecycle) {
-        ByteArrayOutputStream output = new ByteArrayOutputStream();
-        bmp.compress(CompressFormat.PNG, 100, output);
-        if (needRecycle) {
-            bmp.recycle();
+//        ByteArrayOutputStream output = new ByteArrayOutputStream();
+//        bmp.compress(CompressFormat.PNG, 100, output);
+//        if (needRecycle) {
+//            bmp.recycle();
+//        }
+//
+//        byte[] result = output.toByteArray();
+//        try {
+//            output.close();
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
+//
+//        return result;
+        //code from :http://www.cnblogs.com/wsfjlagr/p/3711796.html
+        int i;
+        int j;
+        if (bmp.getHeight() > bmp.getWidth()) {
+            i = bmp.getWidth();
+            j = bmp.getWidth();
+        } else {
+            i = bmp.getHeight();
+            j = bmp.getHeight();
         }
 
-        byte[] result = output.toByteArray();
-        try {
-            output.close();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        Bitmap localBitmap = Bitmap.createBitmap(i, j, Bitmap.Config.RGB_565);
+        Canvas localCanvas = new Canvas(localBitmap);
 
-        return result;
+        while (true) {
+            localCanvas.drawBitmap(bmp, new Rect(0, 0, i, j), new Rect(0, 0,i, j), null);
+            if (needRecycle)
+                bmp.recycle();
+            ByteArrayOutputStream localByteArrayOutputStream = new ByteArrayOutputStream();
+            localBitmap.compress(Bitmap.CompressFormat.JPEG, 100,
+                    localByteArrayOutputStream);
+            localBitmap.recycle();
+            byte[] arrayOfByte = localByteArrayOutputStream.toByteArray();
+            try {
+                localByteArrayOutputStream.close();
+                return arrayOfByte;
+            } catch (Exception e) {
+                //F.out(e);
+            }
+            i = bmp.getHeight();
+            j = bmp.getHeight();
+        }
     }
+
 
     public static byte[] getHtmlByteArray(final String url) {
         URL htmlUrl = null;
