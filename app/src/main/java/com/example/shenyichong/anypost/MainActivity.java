@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Matrix;
 import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import android.os.Bundle;
@@ -356,7 +357,14 @@ public class MainActivity extends Activity implements
                 if (mImageView.getDrawable() != null) {
                     //发送图片朋友圈
                     Bitmap bmp = ((BitmapDrawable) mImageView.getDrawable()).getBitmap();
-                    WXImageObject imgObj = new WXImageObject(bmp);
+                    //缩放bmp的代码，新的newbmp宽和高都缩放为原来的0.5倍。
+                    int tmp_height = bmp.getHeight();
+                    int tmp_width = bmp.getWidth();
+                    Matrix matrix = new Matrix();
+                    matrix.postScale((float)0.5, (float)0.5);
+                    Bitmap newbmp = Bitmap.createBitmap(bmp, 0, 0, tmp_width, tmp_height, matrix,
+                            true);
+                    WXImageObject imgObj = new WXImageObject(newbmp);
 
                     WXMediaMessage msg = new WXMediaMessage();
                     msg.mediaObject = imgObj;
@@ -366,8 +374,8 @@ public class MainActivity extends Activity implements
                     msg.thumbData = Util.bmpToByteArray(thumbBmp, true);  // 设置缩略图
 
                     //msg.setThumbImage(bmp);
-                    msg.title = String.valueOf(editText.getText());
-                    msg.description = String.valueOf(editText.getText());
+//                   msg.title = String.valueOf(editText.getText());
+//                   msg.description = String.valueOf(editText.getText());
 
                     SendMessageToWX.Req req = new SendMessageToWX.Req();
                     req.transaction = "img" + System.currentTimeMillis(); // transaction字段用于唯一标识一个请求

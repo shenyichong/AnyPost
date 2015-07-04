@@ -35,7 +35,6 @@ public class Util {
 //        } catch (Exception e) {
 //            e.printStackTrace();
 //        }
-//
 //        return result;
         //code from :http://www.cnblogs.com/wsfjlagr/p/3711796.html
         int i;
