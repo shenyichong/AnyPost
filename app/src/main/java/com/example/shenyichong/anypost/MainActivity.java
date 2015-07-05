@@ -357,15 +357,24 @@ public class MainActivity extends Activity implements
                 if (mImageView.getDrawable() != null) {
                     //发送图片朋友圈
                     Bitmap bmp = ((BitmapDrawable) mImageView.getDrawable()).getBitmap();
-                    //缩放bmp的代码，新的newbmp宽和高都缩放为原来的0.5倍。
-                    int tmp_height = bmp.getHeight();
-                    int tmp_width = bmp.getWidth();
-                    Matrix matrix = new Matrix();
-                    matrix.postScale((float)0.5, (float)0.5);
-                    Bitmap newbmp = Bitmap.createBitmap(bmp, 0, 0, tmp_width, tmp_height, matrix,
-                            true);
-                    WXImageObject imgObj = new WXImageObject(newbmp);
+                    WXImageObject imgObj = new WXImageObject(bmp);
+                    //issue：使用相机照片发送朋友圈时出现调其分享界面然后崩溃
+                    //设置传入图片位图大小，经过多次测试，当WXImageObject.imageData大于240KB时，就无法成功唤起朋友圈分享UI
+                    //因此设置当WXImageObject.imageData大于240KB就缩放构造其的bmp，直到imageData小于240KB
+                    while(imgObj.imageData.length/1024 > 240){
+                        //缩放bmp的代码，新的newbmp宽和高都缩放为原来的0.5倍。
+                        int tmp_height = bmp.getHeight();
+                        int tmp_width = bmp.getWidth();
+                        Matrix matrix = new Matrix();
+                        matrix.postScale((float)0.8, (float)0.8);//bmp的缩放比例为0.8，可设置
+                        bmp = Bitmap.createBitmap(bmp, 0, 0, tmp_width, tmp_height, matrix, true);
+                        imgObj = new WXImageObject(bmp);
+                    }
 
+                    if(imgObj.checkArgs() == false) {
+                        Toast.makeText(MainActivity.this, "WXImageObject args is wrong!", Toast.LENGTH_LONG).show();
+                        return;
+                    }
                     WXMediaMessage msg = new WXMediaMessage();
                     msg.mediaObject = imgObj;
 
