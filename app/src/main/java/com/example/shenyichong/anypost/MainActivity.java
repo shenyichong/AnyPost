@@ -25,8 +25,8 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
+import android.widget.CompoundButton;
 import android.widget.EditText;
-import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
@@ -89,8 +89,8 @@ public class MainActivity extends Activity implements
     private Button          mSharedBtn;
     /** 图片选择按钮 */
     private Button          mImageSelectBtn;
-    //微信分享按钮
-    private ImageButton     mWeichatBtn;
+    //微信选择分享按钮
+    private ToggleButton     mWechatBtn;
     /** 用于获取微博信息流等操作的API */
     private StatusesAPI mStatusesAPI;   //open API to update status
 
@@ -111,12 +111,20 @@ public class MainActivity extends Activity implements
         //注册按钮，使得按钮被点击时，调用onClick函数
         mSharedBtn = (Button) findViewById(R.id.share_button);
         mImageSelectBtn = (Button)findViewById(R.id.image_select_button);
+        mWechatBtn=(ToggleButton)findViewById(R.id.toggleButton_wechat);
+
         mSharedBtn.setOnClickListener(this);
         mImageSelectBtn.setOnClickListener(this);
+        //设置微信分享选择按钮背景
+        mWechatBtn.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                mWechatBtn.setChecked(isChecked);
+                mWechatBtn.setBackgroundResource(isChecked ? R.drawable.wechat_timeline : R.drawable.wechat_timeline_unchecked);
+            }
+        });
         mSharedBtn.setEnabled(false);
 
-        mWeichatBtn = (ImageButton) findViewById(R.id.wechatButton);
-        mWeichatBtn.setOnClickListener(this);
 
         editText = (EditText) findViewById(R.id.editText);
         mImageView = (ImageView) findViewById(R.id.imageView);
@@ -133,6 +141,7 @@ public class MainActivity extends Activity implements
         mWeixinAPI = WXAPIFactory.createWXAPI(this,Constants.APP_ID,true);
         //将应用注册到微信
         mWeixinAPI.registerApp(Constants.APP_ID);
+
 
         // SSO 授权, 仅客户端
         findViewById(R.id.weibo_button).setOnClickListener(new View.OnClickListener() {
@@ -380,9 +389,8 @@ public class MainActivity extends Activity implements
 
                     Bitmap thumbBmp = Bitmap.createScaledBitmap(bmp, 150, 150, true);
                     //bmp.recycle();
-                    msg.thumbData = Util.bmpToByteArray(thumbBmp, true);  // 设置缩略图
+                    msg.thumbData = Util.bmpToByteArray(thumbBmp, true);  // 设置缩略图（大小不能够超过32KB）
 
-                    //msg.setThumbImage(bmp);
 //                   msg.title = String.valueOf(editText.getText());
 //                   msg.description = String.valueOf(editText.getText());
 
@@ -416,9 +424,6 @@ public class MainActivity extends Activity implements
         else if(R.id.image_select_button == v.getId()){
             Intent i = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
             startActivityForResult(i, RESULT_LOAD_IMAGE);
-        }
-        else if(R.id.wechatButton == v.getId()){
-
         }
 
     }

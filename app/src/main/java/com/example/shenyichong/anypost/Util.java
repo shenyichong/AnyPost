@@ -59,12 +59,12 @@ public class Util {
                     localByteArrayOutputStream);
             byte[] arrayOfByte = localByteArrayOutputStream.toByteArray();
             //传入朋友圈的缩略图大小不能够超过32KB
-            //需要修改，为啥compress后越来越大....?
-//            while(arrayOfByte.length/1024 >= 32){
-//                localBitmap.compress(Bitmap.CompressFormat.JPEG, 90,
-//                        localByteArrayOutputStream);
-//                arrayOfByte = localByteArrayOutputStream.toByteArray();
-//            }
+            while(arrayOfByte.length/1024 >= 32){
+                localByteArrayOutputStream.reset(); // 一定要reset，否则ByteArrayOutputStream会expand越来越大
+                localBitmap.compress(Bitmap.CompressFormat.JPEG, 90,
+                        localByteArrayOutputStream);
+                arrayOfByte = localByteArrayOutputStream.toByteArray();
+            }
             localBitmap.recycle();
             try {
                 localByteArrayOutputStream.close();
