@@ -100,9 +100,8 @@ public class MainActivity extends Activity implements
     private GestureDetectorCompat mDetector;
     //used to evoke keyboard when double taped
     private InputMethodManager imm;
-    /**
-     * 注意：SsoHandler 仅当 SDK 支持 SSO 时有效
-     */
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -450,6 +449,9 @@ public class MainActivity extends Activity implements
                 // mId allows you to update the notification later on.
                 mNotificationManager.notify(MID_PRE,mBuilder.build());
             }
+            else{
+                Toast.makeText(MainActivity.this, R.string.please_select_social_network, Toast.LENGTH_LONG).show();
+            }
         }
         else if(R.id.image_select_button == v.getId()){
             Intent i = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
@@ -477,9 +479,9 @@ public class MainActivity extends Activity implements
                     //通知栏显示AnyPost发送成功
                     NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(MainActivity.this)
                             .setSmallIcon(R.drawable.ic_launcher)
-                            .setContentTitle(getString(R.string.publish_status_done))
-                            .setContentText(getString(R.string.publish_status_done));;
-                    mBuilder.setTicker(getString(R.string.publish_status_done));
+                            .setContentTitle(getString(R.string.publish_status_weibo_done))
+                            .setContentText(getString(R.string.publish_status_weibo_done));;
+                    mBuilder.setTicker(getString(R.string.publish_status_weibo_done));
                     NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
                     mNotificationManager.cancel(MID_PRE);
                     mNotificationManager.notify(null, MID_POST, mBuilder.build());
@@ -507,9 +509,9 @@ public class MainActivity extends Activity implements
             //在通知栏显示AnyPost发布失败
             NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(MainActivity.this)
                     .setSmallIcon(R.drawable.ic_launcher)
-                    .setContentTitle(getString(R.string.publish_status_fail))
-                    .setContentText(getString(R.string.publish_status_fail));;
-            mBuilder.setTicker(getString(R.string.publish_status_fail));
+                    .setContentTitle(getString(R.string.publish_status_weibo_fail))
+                    .setContentText(getString(R.string.publish_status_weibo_fail));;
+            mBuilder.setTicker(getString(R.string.publish_status_weibo_fail));
             NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
             mNotificationManager.cancel(MID_PRE);
             mNotificationManager.notify(null, MID_POST, mBuilder.build());
