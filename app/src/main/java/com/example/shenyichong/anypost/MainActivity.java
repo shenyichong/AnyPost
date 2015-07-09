@@ -91,6 +91,8 @@ public class MainActivity extends Activity implements
     private Button          mImageSelectBtn;
     //微信选择分享按钮
     private ToggleButton     mWechatBtn;
+    //微博选择分享按钮
+    private ToggleButton     mWeiboBtn;
     /** 用于获取微博信息流等操作的API */
     private StatusesAPI mStatusesAPI;   //open API to update status
 
@@ -112,19 +114,27 @@ public class MainActivity extends Activity implements
         mSharedBtn = (Button) findViewById(R.id.share_button);
         mImageSelectBtn = (Button)findViewById(R.id.image_select_button);
         mWechatBtn=(ToggleButton)findViewById(R.id.toggleButton_wechat);
+        mWeiboBtn=(ToggleButton)findViewById(R.id.toggleButton_weibo);
 
         mSharedBtn.setOnClickListener(this);
+        mSharedBtn.setEnabled(false);
         mImageSelectBtn.setOnClickListener(this);
         //设置微信分享选择按钮背景
         mWechatBtn.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 mWechatBtn.setChecked(isChecked);
-                mWechatBtn.setBackgroundResource(isChecked ? R.drawable.wechat_timeline : R.drawable.wechat_timeline_unchecked);
+                mWechatBtn.setBackgroundResource(isChecked ? R.drawable.btn_share_weixin_quan : R.drawable.btn_share_weixin_quan_unselected);
             }
         });
-        mSharedBtn.setEnabled(false);
-
+        //设置微博分享选择按钮背景
+        mWeiboBtn.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                mWeiboBtn.setChecked(isChecked);
+                mWeiboBtn.setBackgroundResource(isChecked ? R.drawable.btn_share_weibo : R.drawable.btn_share_weibo_unselected);
+            }
+        });
 
         editText = (EditText) findViewById(R.id.editText);
         mImageView = (ImageView) findViewById(R.id.imageView);
@@ -142,16 +152,30 @@ public class MainActivity extends Activity implements
         //将应用注册到微信
         mWeixinAPI.registerApp(Constants.APP_ID);
 
-
         // SSO 授权, 仅客户端
-        findViewById(R.id.weibo_button).setOnClickListener(new View.OnClickListener() {
+        mWeiboBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mSsoHandler.authorize(new AuthListener());
+                if (mWeiboBtn.isChecked() == true && (mAccessToken == null || mAccessToken.isSessionValid() == false))
+                    mSsoHandler.authorize(new AuthListener());
             }
         });
-        // 获取当前已保存过的 Token
+        // 获取当前已保存过的微博 Token
         mAccessToken = AccessTokenKeeper.readAccessToken(this);
+
+        //设置社交网络选择按钮
+        //微博
+        if(mAccessToken == null || mAccessToken.isSessionValid() == false){
+            mWeiboBtn.setChecked(false);
+            mWeiboBtn.setBackgroundResource(R.drawable.btn_share_weibo_unselected);
+        }
+        else{
+            mWeiboBtn.setChecked(true);
+            mWeiboBtn.setBackgroundResource(R.drawable.btn_share_weibo);
+        }
+
+        //微信
+        mWechatBtn.setChecked(true);
 
         // Watch EditText
         editText.addTextChangedListener(new TextWatcher() {
@@ -295,7 +319,8 @@ public class MainActivity extends Activity implements
                 AccessTokenKeeper.writeAccessToken(MainActivity.this, mAccessToken);
                 Toast.makeText(MainActivity.this,
                         R.string.weibosdk_demo_toast_auth_success, Toast.LENGTH_SHORT).show();
-
+                        mWeiboBtn.setChecked(true);
+                        mWeiboBtn.setBackgroundResource(R.drawable.btn_share_weibo);
             } else {
                 // 以下几种情况，您会收到 Code：
                 // 1. 当您未在平台上注册的应用程序的包名与签名时；
@@ -307,6 +332,8 @@ public class MainActivity extends Activity implements
                     message = message + "\nObtained the code: " + code;
                 }
                 Toast.makeText(MainActivity.this, message, Toast.LENGTH_LONG).show();
+                mWeiboBtn.setChecked(false);
+                mWeiboBtn.setBackgroundResource(R.drawable.btn_share_weibo_unselected);
             }
         }
 
@@ -314,12 +341,16 @@ public class MainActivity extends Activity implements
         public void onCancel() {
             Toast.makeText(MainActivity.this,
                     R.string.weibosdk_demo_toast_auth_canceled, Toast.LENGTH_LONG).show();
+                    mWeiboBtn.setChecked(false);
+                    mWeiboBtn.setBackgroundResource(R.drawable.btn_share_weibo_unselected);
         }
 
         @Override
         public void onWeiboException(WeiboException e) {
             Toast.makeText(MainActivity.this,
                     "Auth exception : " + e.getMessage(), Toast.LENGTH_LONG).show();
+                    mWeiboBtn.setChecked(false);
+                    mWeiboBtn.setBackgroundResource(R.drawable.btn_share_weibo_unselected);
         }
     }
 
@@ -329,96 +360,95 @@ public class MainActivity extends Activity implements
      */
     @Override
     public void onClick(View v) {
+
         if (R.id.share_button == v.getId()) {
             // sendMultiMessage(true, true); //使用微博发博器进行微博发送
             //发送微博功能实现
-            if(mAccessToken == null || mAccessToken.isSessionValid() == false){
-                    Toast.makeText(MainActivity.this, R.string.please_logon_weibo, Toast.LENGTH_LONG).show();
-                    return;
-            }else
+            if(mWeiboBtn.isChecked() || mWechatBtn.isChecked()){
+                if (mWeiboBtn.isChecked() == true){
                     mStatusesAPI = new StatusesAPI(this, Constants.APP_KEY, mAccessToken);
+                    if(mImageView.getDrawable() != null)
+                        //发送图片微博
+                        mStatusesAPI.upload(editText.getText().toString(), ((BitmapDrawable)mImageView.getDrawable()).getBitmap(), null, null, mListener);
+                        // 如何发送原图到微博？ http://stackoverflow.com/questions/3879992/get-bitmap-from-an-uri-android
+                        // mStatusesAPI.upload(editText.getText().toString(), getThumbnail(electedImage_Uri) , null, null, mListener);
+                    else
+                        //发送文字微博
+                        mStatusesAPI.update(editText.getText().toString(), null, null, mListener);
+                }
+                if (mWechatBtn.isChecked() == true){
+                    //实现微信发送朋友圈功能
+                    if (mImageView.getDrawable() != null) {
+                        //发送图片朋友圈
+                        Bitmap bmp = ((BitmapDrawable) mImageView.getDrawable()).getBitmap();
+                        WXImageObject imgObj = new WXImageObject(bmp);
+                        //issue：使用相机照片发送朋友圈时出现调其分享界面然后崩溃
+                        //设置传入图片位图大小，经过多次测试，当WXImageObject.imageData大于240KB时，就无法成功唤起朋友圈分享UI
+                        //因此设置当WXImageObject.imageData大于240KB就缩放构造其的bmp，直到imageData小于240KB
+                        while(imgObj.imageData.length/1024 > 240){
+                            //缩放bmp的代码，新的newbmp宽和高都缩放为原来的0.5倍。
+                            int tmp_height = bmp.getHeight();
+                            int tmp_width = bmp.getWidth();
+                            Matrix matrix = new Matrix();
+                            matrix.postScale((float)0.8, (float)0.8);//bmp的缩放比例为0.8，可设置
+                            bmp = Bitmap.createBitmap(bmp, 0, 0, tmp_width, tmp_height, matrix, true);
+                            imgObj = new WXImageObject(bmp);
+                        }
 
-            if(mImageView.getDrawable() != null)
-                //发送图片微博
-                mStatusesAPI.upload(editText.getText().toString(), ((BitmapDrawable)mImageView.getDrawable()).getBitmap(), null, null, mListener);
-                // 如何发送原图到微博？ http://stackoverflow.com/questions/3879992/get-bitmap-from-an-uri-android
-                // mStatusesAPI.upload(editText.getText().toString(), getThumbnail(electedImage_Uri) , null, null, mListener);
-            else
-                //发送文字微博
-                mStatusesAPI.update(editText.getText().toString(), null, null, mListener);
+                        if(imgObj.checkArgs() == false) {
+                            Toast.makeText(MainActivity.this, "WXImageObject args is wrong!", Toast.LENGTH_LONG).show();
+                            return;
+                        }
+                        WXMediaMessage msg = new WXMediaMessage();
+                        msg.mediaObject = imgObj;
 
-            NotificationCompat.Builder mBuilder =
-                    new NotificationCompat.Builder(this)
-                            .setSmallIcon(R.drawable.ic_launcher)
-                            .setContentTitle(getString(R.string.publish_status))
-                            .setContentText(getString(R.string.publish_status));
-            //设定通知优先级
-            mBuilder.setPriority(NotificationCompat.PRIORITY_MAX);
-            //设定闪现提示语文字
-            mBuilder.setTicker(getString(R.string.publish_status));
-            //设定不能够被滑动删除
-            mBuilder.setOngoing(true);
-            NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-            // mId allows you to update the notification later on.
-            mNotificationManager.notify(MID_PRE,mBuilder.build());
-            if(((ToggleButton)findViewById(R.id.toggleButton_wechat)).isChecked() == true) {
-                //实现微信发送朋友圈功能
-                if (mImageView.getDrawable() != null) {
-                    //发送图片朋友圈
-                    Bitmap bmp = ((BitmapDrawable) mImageView.getDrawable()).getBitmap();
-                    WXImageObject imgObj = new WXImageObject(bmp);
-                    //issue：使用相机照片发送朋友圈时出现调其分享界面然后崩溃
-                    //设置传入图片位图大小，经过多次测试，当WXImageObject.imageData大于240KB时，就无法成功唤起朋友圈分享UI
-                    //因此设置当WXImageObject.imageData大于240KB就缩放构造其的bmp，直到imageData小于240KB
-                    while(imgObj.imageData.length/1024 > 240){
-                        //缩放bmp的代码，新的newbmp宽和高都缩放为原来的0.5倍。
-                        int tmp_height = bmp.getHeight();
-                        int tmp_width = bmp.getWidth();
-                        Matrix matrix = new Matrix();
-                        matrix.postScale((float)0.8, (float)0.8);//bmp的缩放比例为0.8，可设置
-                        bmp = Bitmap.createBitmap(bmp, 0, 0, tmp_width, tmp_height, matrix, true);
-                        imgObj = new WXImageObject(bmp);
-                    }
-
-                    if(imgObj.checkArgs() == false) {
-                        Toast.makeText(MainActivity.this, "WXImageObject args is wrong!", Toast.LENGTH_LONG).show();
-                        return;
-                    }
-                    WXMediaMessage msg = new WXMediaMessage();
-                    msg.mediaObject = imgObj;
-
-                    Bitmap thumbBmp = Bitmap.createScaledBitmap(bmp, 150, 150, true);
-                    //bmp.recycle();
-                    msg.thumbData = Util.bmpToByteArray(thumbBmp, true);  // 设置缩略图（大小不能够超过32KB）
+                        Bitmap thumbBmp = Bitmap.createScaledBitmap(bmp, 150, 150, true);
+                        //bmp.recycle();
+                        msg.thumbData = Util.bmpToByteArray(thumbBmp, true);  // 设置缩略图（大小不能够超过32KB）
 
 //                   msg.title = String.valueOf(editText.getText());
 //                   msg.description = String.valueOf(editText.getText());
 
-                    SendMessageToWX.Req req = new SendMessageToWX.Req();
-                    req.transaction = "img" + System.currentTimeMillis(); // transaction字段用于唯一标识一个请求
-                    req.message = msg;
-                    req.scene = SendMessageToWX.Req.WXSceneTimeline;
-                    mWeixinAPI.sendReq(req);
+                        SendMessageToWX.Req req = new SendMessageToWX.Req();
+                        req.transaction = "img" + System.currentTimeMillis(); // transaction字段用于唯一标识一个请求
+                        req.message = msg;
+                        req.scene = SendMessageToWX.Req.WXSceneTimeline;
+                        mWeixinAPI.sendReq(req);
 
-                } else {
-                    //发送文字朋友圈
-                    // 初始化一个WXTextObject对象
-                    WXTextObject textObj = new WXTextObject();
-                    textObj.text = String.valueOf(editText.getText());
-                    // 用WXTextObject对象初始化一个WXMediaMessage对象
-                    WXMediaMessage msg = new WXMediaMessage();
-                    msg.mediaObject = textObj;
-                    // 发送文本类型的消息时，title字段不起作用
-                    // msg.title = "Will be ignored";
-                    msg.description = String.valueOf(editText.getText());
-                    // 构造一个Req
-                    SendMessageToWX.Req req = new SendMessageToWX.Req();
-                    req.transaction = "text" + System.currentTimeMillis(); // transaction字段用于唯一标识一个请求
-                    req.message = msg;
-                    req.scene = SendMessageToWX.Req.WXSceneTimeline;
-                    // 调用api接口发送数据到微信
-                    mWeixinAPI.sendReq(req);
+                    } else {
+                        //发送文字朋友圈
+                        // 初始化一个WXTextObject对象
+                        WXTextObject textObj = new WXTextObject();
+                        textObj.text = String.valueOf(editText.getText());
+                        // 用WXTextObject对象初始化一个WXMediaMessage对象
+                        WXMediaMessage msg = new WXMediaMessage();
+                        msg.mediaObject = textObj;
+                        // 发送文本类型的消息时，title字段不起作用
+                        // msg.title = "Will be ignored";
+                        msg.description = String.valueOf(editText.getText());
+                        // 构造一个Req
+                        SendMessageToWX.Req req = new SendMessageToWX.Req();
+                        req.transaction = "text" + System.currentTimeMillis(); // transaction字段用于唯一标识一个请求
+                        req.message = msg;
+                        req.scene = SendMessageToWX.Req.WXSceneTimeline;
+                        // 调用api接口发送数据到微信
+                        mWeixinAPI.sendReq(req);
+                    }
                 }
+                NotificationCompat.Builder mBuilder =
+                        new NotificationCompat.Builder(this)
+                                .setSmallIcon(R.drawable.ic_launcher)
+                                .setContentTitle(getString(R.string.publish_status))
+                                .setContentText(getString(R.string.publish_status));
+                //设定通知优先级
+                mBuilder.setPriority(NotificationCompat.PRIORITY_MAX);
+                //设定闪现提示语文字
+                mBuilder.setTicker(getString(R.string.publish_status));
+                //设定不能够被滑动删除
+                mBuilder.setOngoing(true);
+                NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+                // mId allows you to update the notification later on.
+                mNotificationManager.notify(MID_PRE,mBuilder.build());
             }
         }
         else if(R.id.image_select_button == v.getId()){

@@ -41,12 +41,14 @@
         android:layout_alignRight="@+id/horizontalScrollView"
         android:layout_alignEnd="@+id/horizontalScrollView" />
 
-    <ImageButton
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/weibo_button"
+    <ToggleButton
+        android:layout_width="35dp"
+        android:layout_height="35dp"
+        android:id="@+id/toggleButton_weibo"
         android:contentDescription="@string/abc_action_bar_home_description"
-        android:background="@drawable/com_sina_weibo_sdk_login_button_with_original_logo"
+        android:background="@drawable/btn_share_weibo"
+        android:textOff=""
+        android:textOn=""
         android:layout_alignTop="@+id/share_button"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
@@ -74,7 +76,7 @@
     <ToggleButton
         android:textOn=""
         android:textOff=""
-        android:background="@drawable/wechat_timeline"
+        android:background="@drawable/btn_share_weixin_quan"
         android:layout_width="35dp"
         android:layout_height="35dp"
         android:id="@+id/toggleButton_wechat"
