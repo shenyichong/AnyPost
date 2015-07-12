@@ -11,6 +11,7 @@ import android.graphics.Matrix;
 import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.provider.MediaStore;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.view.GestureDetectorCompat;
@@ -53,6 +54,9 @@ import com.tencent.mm.sdk.modelmsg.WXTextObject;
 import com.tencent.mm.sdk.openapi.IWXAPI;
 import com.tencent.mm.sdk.openapi.WXAPIFactory;
 
+import java.io.File;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 
 //public class MainActivity extends Activity implements View.OnClickListener, IWeiboHandler.Response {
@@ -66,6 +70,8 @@ public class MainActivity extends Activity implements
     private static int RESULT_LOAD_IMAGE = 3;
     private static int MID_PRE = 10;
     private static int MID_POST = 11;
+    private static int MEDIA_TYPE_IMAGE = 12;
+    private static int CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE = 13;
 
     private AuthInfo mAuthInfo;
     /** 显示认证后的信息，如 AccessToken */
@@ -100,6 +106,10 @@ public class MainActivity extends Activity implements
     private GestureDetectorCompat mDetector;
     //used to evoke keyboard when double taped
     private InputMethodManager imm;
+    //Uri to save camera photo
+    private Uri  fileUri;
+
+    ImageLoaderConfiguration mUILconfig;
 
 
     @Override
@@ -118,6 +128,20 @@ public class MainActivity extends Activity implements
         mSharedBtn.setOnClickListener(this);
         mSharedBtn.setEnabled(false);
         mImageSelectBtn.setOnClickListener(this);
+        //实现长按图片选择按钮，弹出照相界面功能
+        mImageSelectBtn.setOnLongClickListener(new View.OnLongClickListener(){
+            @Override
+            public boolean  onLongClick(View v){
+                // create Intent to take a picture and return control to the calling application
+                Intent i = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);;
+                fileUri  = Uri.fromFile(getOutputMediaFile(MEDIA_TYPE_IMAGE)); // create a file to save the image
+                i.putExtra(MediaStore.EXTRA_OUTPUT, fileUri); // set the image file name
+
+                // start the image capture Intent
+                startActivityForResult(i, CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE);
+                return true;
+            }
+        });
         //设置微信分享选择按钮背景
         mWechatBtn.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
@@ -196,10 +220,9 @@ public class MainActivity extends Activity implements
         mDetector = new GestureDetectorCompat(this,new MyGestureListener());
         imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
 
-
         //code from Open Scource Project Android_Universal_Image_Loader
-        ImageLoaderConfiguration config = new ImageLoaderConfiguration.Builder(this).build();
-        ImageLoader.getInstance().init(config);
+        mUILconfig = new ImageLoaderConfiguration.Builder(this).build();
+        ImageLoader.getInstance().init(mUILconfig);
     }
     @Override
     public boolean onTouchEvent(MotionEvent event){
@@ -261,7 +284,7 @@ public class MainActivity extends Activity implements
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
-        if (requestCode == RESULT_LOAD_IMAGE && resultCode == RESULT_OK && null != data) {
+        if (requestCode == RESULT_LOAD_IMAGE  && resultCode == RESULT_OK && null != data) {
             Uri selectedImage = data.getData();
             //electedImage_Uri = selectedImage;
             String[] filePathColumn = { MediaStore.Images.Media.DATA };
@@ -289,14 +312,41 @@ public class MainActivity extends Activity implements
             options.inJustDecodeBounds = false;
             Image = BitmapFactory.decodeFile(picturePath,options);
             mImageView.setImageBitmap(Image);
-            return;
+        }else if(requestCode == CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE){
+            if (resultCode == RESULT_OK) {
+                String photoPath =  getRealPathFromURI(fileUri);
+                //设置图片尺寸，防止图片过大无法显示
+                BitmapFactory.Options options = new BitmapFactory.Options();
+                options.inJustDecodeBounds = true;
+                Bitmap Image = BitmapFactory.decodeFile(photoPath,options);
+                mSampleSize = 1;
+                mHeight = options.outHeight;
+                mWidth  = options.outWidth;
+                while(mHeight > 4096 || mWidth > 4096){
+                    mHeight /= 2; mWidth /= 2;
+                    mSampleSize *= 2;
+                }
+                options.inSampleSize = mSampleSize;
+                //后续可以根据layout设置固定尺寸
+                options.inJustDecodeBounds = false;
+                Image = BitmapFactory.decodeFile(photoPath,options);
+                mImageView.setImageBitmap(Image);
+
+            } else if (resultCode == RESULT_CANCELED) {
+                // User cancelled the image capture
+            } else {
+                // Image capture failed, advise user
+            }
+
         }
 
         // SSO 授权回调
         // 重要：发起 SSO 登陆的 Activity 必须重写 onActivityResult
-        if (mSsoHandler != null) {
+        else if (mSsoHandler != null) {
             mSsoHandler.authorizeCallBack(requestCode, resultCode, data);
         }
+
+
     }
 
     /**
@@ -530,4 +580,47 @@ public class MainActivity extends Activity implements
         }
     };
 
+    /** Create a File for saving an image or video */
+    private static File getOutputMediaFile(int type){
+        // To be safe, you should check that the SDCard is mounted
+        // using Environment.getExternalStorageState() before doing this.
+
+        File mediaStorageDir = new File(Environment.getExternalStoragePublicDirectory(
+                Environment.DIRECTORY_PICTURES), "AnyPost");
+        // This location works best if you want the created images to be shared
+        // between applications and persist after your app has been uninstalled.
+
+        // Create the storage directory if it does not exist
+        if (! mediaStorageDir.exists()){
+            if (! mediaStorageDir.mkdirs()){
+                Log.d("AnyPost", "failed to create directory");
+                return null;
+            }
+        }
+        // Create a media file name
+        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+        File mediaFile;
+        if (type == MEDIA_TYPE_IMAGE){
+            mediaFile = new File(mediaStorageDir.getPath() + File.separator +
+                    "IMG_"+ timeStamp + ".jpg");
+        } else {
+            return null;
+        }
+        return mediaFile;
+    }
+
+    //function to get Real Path from URI
+    private String getRealPathFromURI(Uri contentURI) {
+        String result;
+        Cursor cursor = getContentResolver().query(contentURI, null, null, null, null);
+        if (cursor == null) { // Source is Dropbox or other similar local file path
+            result = contentURI.getPath();
+        } else {
+            cursor.moveToFirst();
+            int idx = cursor.getColumnIndex(MediaStore.Images.ImageColumns.DATA);
+            result = cursor.getString(idx);
+            cursor.close();
+        }
+        return result;
+    }
 }

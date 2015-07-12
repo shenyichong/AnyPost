@@ -13,10 +13,10 @@
     <string name="publish_status_wechat_done">AnyPost朋友圈发布成功</string>
     <string name="please_select_social_network">请选择分享的社交网络</string>
 
-    <string name="errcode_success">发送成功</string>
-    <string name="errcode_cancel">发送取消</string>
-    <string name="errcode_deny">发送被拒绝</string>
-    <string name="errcode_unknown">发送返回</string>
+    <string name="errcode_success">微信发送成功</string>
+    <string name="errcode_cancel">微信发送取消</string>
+    <string name="errcode_deny">微信发送被拒绝</string>
+    <string name="errcode_unknown">微信发送返回</string>
 
     <!-- 功能列表 -->
     <string name="weibosdk_demo_feature_oauth">微博授权</string>
