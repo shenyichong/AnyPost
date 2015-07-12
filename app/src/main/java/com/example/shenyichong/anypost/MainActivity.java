@@ -25,9 +25,9 @@ import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
-import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
@@ -92,9 +92,9 @@ public class MainActivity extends Activity implements
     //private Uri electedImage_Uri;
     private EditText editText;
     /** 分享按钮 */
-    private Button          mSharedBtn;
+    private ImageButton          mSharedBtn;
     /** 图片选择按钮 */
-    private Button          mImageSelectBtn;
+    private ImageButton          mImageSelectBtn;
     //微信选择分享按钮
     private ToggleButton     mWechatBtn;
     //微博选择分享按钮
@@ -120,8 +120,8 @@ public class MainActivity extends Activity implements
         mSsoHandler = new SsoHandler(MainActivity.this, mAuthInfo);
 
         //注册按钮，使得按钮被点击时，调用onClick函数
-        mSharedBtn = (Button) findViewById(R.id.share_button);
-        mImageSelectBtn = (Button)findViewById(R.id.image_select_button);
+        mSharedBtn = (ImageButton) findViewById(R.id.share_button);
+        mImageSelectBtn = (ImageButton)findViewById(R.id.image_select_button);
         mWechatBtn=(ToggleButton)findViewById(R.id.toggleButton_wechat);
         mWeiboBtn=(ToggleButton)findViewById(R.id.toggleButton_weibo);
 
