@@ -100,7 +100,9 @@ public class MainActivity extends Activity implements
     //微博选择分享按钮
     private ToggleButton     mWeiboBtn;
     /** 用于获取微博信息流等操作的API */
-    private StatusesAPI mStatusesAPI;   //open API to update status
+    private StatusesAPI      mStatusesAPI;   //open API to update status
+    //图片删除按钮
+
 
     //used to detect Gestures
     private GestureDetectorCompat mDetector;
@@ -312,6 +314,7 @@ public class MainActivity extends Activity implements
             options.inJustDecodeBounds = false;
             Image = BitmapFactory.decodeFile(picturePath,options);
             mImageView.setImageBitmap(Image);
+
         }else if(requestCode == CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE){
             if (resultCode == RESULT_OK) {
                 String photoPath =  getRealPathFromURI(fileUri);
@@ -331,7 +334,6 @@ public class MainActivity extends Activity implements
                 options.inJustDecodeBounds = false;
                 Image = BitmapFactory.decodeFile(photoPath,options);
                 mImageView.setImageBitmap(Image);
-
             } else if (resultCode == RESULT_CANCELED) {
                 // User cancelled the image capture
             } else {
