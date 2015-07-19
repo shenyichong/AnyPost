@@ -29,6 +29,7 @@ import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.RelativeLayout;
 import android.widget.Toast;
 import android.widget.ToggleButton;
 
@@ -126,17 +127,19 @@ public class MainActivity extends Activity implements
         mImageSelectBtn = (ImageButton)findViewById(R.id.image_select_button);
         mWechatBtn=(ToggleButton)findViewById(R.id.toggleButton_wechat);
         mWeiboBtn=(ToggleButton)findViewById(R.id.toggleButton_weibo);
+        mImageView=null;
 
         mSharedBtn.setOnClickListener(this);
         mSharedBtn.setEnabled(false);
         mImageSelectBtn.setOnClickListener(this);
         //实现长按图片选择按钮，弹出照相界面功能
-        mImageSelectBtn.setOnLongClickListener(new View.OnLongClickListener(){
+        mImageSelectBtn.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
-            public boolean  onLongClick(View v){
+            public boolean onLongClick(View v) {
                 // create Intent to take a picture and return control to the calling application
-                Intent i = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);;
-                fileUri  = Uri.fromFile(getOutputMediaFile(MEDIA_TYPE_IMAGE)); // create a file to save the image
+                Intent i = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                ;
+                fileUri = Uri.fromFile(getOutputMediaFile(MEDIA_TYPE_IMAGE)); // create a file to save the image
                 i.putExtra(MediaStore.EXTRA_OUTPUT, fileUri); // set the image file name
 
                 // start the image capture Intent
@@ -162,7 +165,6 @@ public class MainActivity extends Activity implements
         });
 
         editText = (EditText) findViewById(R.id.editText);
-        mImageView = (ImageView) findViewById(R.id.imageView);
 
         // 创建微博分享接口实例
         mWeiboShareAPI = WeiboShareSDK.createWeiboAPI(this, Constants.APP_KEY);
@@ -225,6 +227,8 @@ public class MainActivity extends Activity implements
         //code from Open Scource Project Android_Universal_Image_Loader
         mUILconfig = new ImageLoaderConfiguration.Builder(this).build();
         ImageLoader.getInstance().init(mUILconfig);
+
+
     }
     @Override
     public boolean onTouchEvent(MotionEvent event){
@@ -313,8 +317,12 @@ public class MainActivity extends Activity implements
             //后续可以根据layout设置固定尺寸
             options.inJustDecodeBounds = false;
             Image = BitmapFactory.decodeFile(picturePath,options);
-            mImageView.setImageBitmap(Image);
-
+            //设置图片展示layout,need to be modified
+            RelativeLayout imageShower = (RelativeLayout)findViewById(R.id.image_shower);
+            imageShower.removeAllViews();
+            ImageView view = addImageView(Image);
+            imageShower.addView(view,1000,1000);
+            imageShower.addView(addDeleteView(view),50,50);
         }else if(requestCode == CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE){
             if (resultCode == RESULT_OK) {
                 String photoPath =  getRealPathFromURI(fileUri);
@@ -333,7 +341,12 @@ public class MainActivity extends Activity implements
                 //后续可以根据layout设置固定尺寸
                 options.inJustDecodeBounds = false;
                 Image = BitmapFactory.decodeFile(photoPath,options);
-                mImageView.setImageBitmap(Image);
+                //设置图片展示layout，need to be modified
+                RelativeLayout imageShower = (RelativeLayout)findViewById(R.id.image_shower);
+                imageShower.removeAllViews();
+                ImageView view = addImageView(Image);
+                imageShower.addView(view,mWidth/mSampleSize,mHeight/mSampleSize);
+                imageShower.addView(addDeleteView(view),50,50);
             } else if (resultCode == RESULT_CANCELED) {
                 // User cancelled the image capture
             } else {
@@ -418,7 +431,8 @@ public class MainActivity extends Activity implements
             if(mWeiboBtn.isChecked() || mWechatBtn.isChecked()){
                 if (mWeiboBtn.isChecked() == true){
                     mStatusesAPI = new StatusesAPI(this, Constants.APP_KEY, mAccessToken);
-                    if(mImageView.getDrawable() != null)
+                    mImageView = (ImageView) findViewById(R.id.image_selected);
+                    if(mImageView != null)
                         //发送图片微博
                         mStatusesAPI.upload(editText.getText().toString(), ((BitmapDrawable)mImageView.getDrawable()).getBitmap(), null, null, mListener);
                         // 如何发送原图到微博？ http://stackoverflow.com/questions/3879992/get-bitmap-from-an-uri-android
@@ -429,7 +443,8 @@ public class MainActivity extends Activity implements
                 }
                 if (mWechatBtn.isChecked() == true){
                     //实现微信发送朋友圈功能
-                    if (mImageView.getDrawable() != null) {
+                    mImageView = (ImageView) findViewById(R.id.image_selected);
+                    if (mImageView != null) {
                         //发送图片朋友圈
                         Bitmap bmp = ((BitmapDrawable) mImageView.getDrawable()).getBitmap();
                         WXImageObject imgObj = new WXImageObject(bmp);
@@ -624,5 +639,34 @@ public class MainActivity extends Activity implements
             cursor.close();
         }
         return result;
+    }
+
+    private ImageView addImageView(Bitmap bmp){
+        ImageView imageView = new ImageView(this);
+        imageView.setImageBitmap(bmp);
+        imageView.setId(R.id.image_selected);
+        RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.WRAP_CONTENT, RelativeLayout.LayoutParams.WRAP_CONTENT);
+        imageView.setLayoutParams(lp);
+        return imageView;
+    }
+
+    private ImageButton addDeleteView(ImageView view){
+        ImageButton imageBtn = new ImageButton(this);
+        RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.WRAP_CONTENT, RelativeLayout.LayoutParams.WRAP_CONTENT);
+        lp.addRule(RelativeLayout.ABOVE,view.getId());
+        lp.addRule(RelativeLayout.ALIGN_RIGHT,view.getId());
+        lp.leftMargin=100;
+        lp.topMargin=200;
+        imageBtn.setLayoutParams(lp);
+        imageBtn.setBackgroundResource(R.drawable.btn_delete);
+        imageBtn.setId(R.id.btn_delete);
+        imageBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v){
+                RelativeLayout imageShower = (RelativeLayout) findViewById(R.id.image_shower);
+                imageShower.removeAllViews();
+            }
+        });
+        return imageBtn;
     }
 }
