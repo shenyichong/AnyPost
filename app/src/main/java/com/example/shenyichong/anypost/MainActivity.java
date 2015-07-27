@@ -2,6 +2,7 @@ package com.example.shenyichong.anypost;
 
 import android.app.Activity;
 import android.app.NotificationManager;
+import android.content.ClipData;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
@@ -15,6 +16,7 @@ import android.os.Environment;
 import android.provider.MediaStore;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.view.GestureDetectorCompat;
+import android.content.ClipboardManager;
 import android.text.Editable;
 import android.text.TextUtils;
 import android.text.TextWatcher;
@@ -321,8 +323,8 @@ public class MainActivity extends Activity implements
             RelativeLayout imageShower = (RelativeLayout)findViewById(R.id.image_shower);
             imageShower.removeAllViews();
             ImageView view = addImageView(Image);
-            imageShower.addView(view,1000,1000);
-            imageShower.addView(addDeleteView(view),50,50);
+            imageShower.addView(view);
+            imageShower.addView(addDeleteView(view),60,60);
         }else if(requestCode == CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE){
             if (resultCode == RESULT_OK) {
                 String photoPath =  getRealPathFromURI(fileUri);
@@ -344,9 +346,12 @@ public class MainActivity extends Activity implements
                 //设置图片展示layout，need to be modified
                 RelativeLayout imageShower = (RelativeLayout)findViewById(R.id.image_shower);
                 imageShower.removeAllViews();
+//                ImageView view = addImageView(Image);
+//                imageShower.addView(view,mWidth/mSampleSize,mHeight/mSampleSize);
+//                imageShower.addView(addDeleteView(view), 50, 50);
                 ImageView view = addImageView(Image);
-                imageShower.addView(view,mWidth/mSampleSize,mHeight/mSampleSize);
-                imageShower.addView(addDeleteView(view),50,50);
+                imageShower.addView(view);
+                imageShower.addView(addDeleteView(view),60,60);
             } else if (resultCode == RESULT_CANCELED) {
                 // User cancelled the image capture
             } else {
@@ -360,8 +365,6 @@ public class MainActivity extends Activity implements
         else if (mSsoHandler != null) {
             mSsoHandler.authorizeCallBack(requestCode, resultCode, data);
         }
-
-
     }
 
     /**
@@ -480,6 +483,10 @@ public class MainActivity extends Activity implements
                         req.message = msg;
                         req.scene = SendMessageToWX.Req.WXSceneTimeline;
                         mWeixinAPI.sendReq(req);
+                        ClipboardManager cmb = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
+                        ClipData cd = ClipData.newPlainText("text", editText.getText().toString());
+                        cmb.setPrimaryClip(cd);
+                        Toast.makeText(MainActivity.this, R.string.copy_to_clipboard, Toast.LENGTH_LONG).show();
 
                     } else {
                         //发送文字朋友圈
@@ -645,6 +652,7 @@ public class MainActivity extends Activity implements
         ImageView imageView = new ImageView(this);
         imageView.setImageBitmap(bmp);
         imageView.setId(R.id.image_selected);
+        imageView.setAdjustViewBounds(true);//make imageView adjust to fit in container bounds.
         RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.WRAP_CONTENT, RelativeLayout.LayoutParams.WRAP_CONTENT);
         imageView.setLayoutParams(lp);
         return imageView;
@@ -653,10 +661,10 @@ public class MainActivity extends Activity implements
     private ImageButton addDeleteView(ImageView view){
         ImageButton imageBtn = new ImageButton(this);
         RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.WRAP_CONTENT, RelativeLayout.LayoutParams.WRAP_CONTENT);
-        lp.addRule(RelativeLayout.ABOVE,view.getId());
-        lp.addRule(RelativeLayout.ALIGN_RIGHT,view.getId());
-        lp.leftMargin=100;
-        lp.topMargin=200;
+        lp.addRule(RelativeLayout.ALIGN_PARENT_RIGHT, RelativeLayout.TRUE);
+        lp.addRule(RelativeLayout.ALIGN_PARENT_TOP, RelativeLayout.TRUE);
+//        lp.leftMargin=100;
+//        lp.topMargin=200;
         imageBtn.setLayoutParams(lp);
         imageBtn.setBackgroundResource(R.drawable.btn_delete);
         imageBtn.setId(R.id.btn_delete);

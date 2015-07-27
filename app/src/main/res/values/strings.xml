@@ -12,6 +12,7 @@
     <string name="publish_status_wechat_fail">AnyPost朋友圈发布失败</string>
     <string name="publish_status_wechat_done">AnyPost朋友圈发布成功</string>
     <string name="please_select_social_network">请选择分享的社交网络</string>
+    <string name="copy_to_clipboard">已将评论复制到剪贴板</string>
 
     <string name="errcode_success">微信发送成功</string>
     <string name="errcode_cancel">微信发送取消</string>
