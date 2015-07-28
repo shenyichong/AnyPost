@@ -324,7 +324,9 @@ public class MainActivity extends Activity implements
             imageShower.removeAllViews();
             ImageView view = addImageView(Image);
             imageShower.addView(view);
-            imageShower.addView(addDeleteView(view),60,60);
+            imageShower.addView(addDeleteView(view));
+            // if set height and width here:imageShower.addView(addDeleteView(view),60,60);
+            // then in function addDeleteView RelativeLayout.LayoutParams can't be reconfigured,such as relative position
         }else if(requestCode == CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE){
             if (resultCode == RESULT_OK) {
                 String photoPath =  getRealPathFromURI(fileUri);
@@ -351,7 +353,7 @@ public class MainActivity extends Activity implements
 //                imageShower.addView(addDeleteView(view), 50, 50);
                 ImageView view = addImageView(Image);
                 imageShower.addView(view);
-                imageShower.addView(addDeleteView(view),60,60);
+                imageShower.addView(addDeleteView(view));
             } else if (resultCode == RESULT_CANCELED) {
                 // User cancelled the image capture
             } else {
@@ -660,9 +662,9 @@ public class MainActivity extends Activity implements
 
     private ImageButton addDeleteView(ImageView view){
         ImageButton imageBtn = new ImageButton(this);
-        RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.WRAP_CONTENT, RelativeLayout.LayoutParams.WRAP_CONTENT);
-        lp.addRule(RelativeLayout.ALIGN_PARENT_RIGHT, RelativeLayout.TRUE);
-        lp.addRule(RelativeLayout.ALIGN_PARENT_TOP, RelativeLayout.TRUE);
+        RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams(60, 60);
+        lp.addRule(RelativeLayout.ALIGN_RIGHT, view.getId());
+        lp.addRule(RelativeLayout.ALIGN_TOP, view.getId());
 //        lp.leftMargin=100;
 //        lp.topMargin=200;
         imageBtn.setLayoutParams(lp);

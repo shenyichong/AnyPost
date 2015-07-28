@@ -34,6 +34,17 @@
             android:exported="true"
             android:theme="@android:style/Theme.Translucent">
         </activity>
+        <activity
+            android:name="com.tencent.tauth.AuthActivity"
+            android:noHistory="true"
+            android:launchMode="singleTask" >
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="tencent1104706497" />
+            </intent-filter>
+        </activity>
     </application>
 
 </manifest>

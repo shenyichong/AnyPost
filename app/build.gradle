@@ -24,4 +24,5 @@ dependencies {
     compile 'com.android.support:appcompat-v7:22.1.0'
     compile 'com.nostra13.universalimageloader:universal-image-loader:1.9.4'
     compile project(':weiboSDK')
+    compile files('libs/mta-sdk-1.6.2.jar')
 }
