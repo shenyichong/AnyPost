@@ -18,6 +18,9 @@ public interface Constants {
     /** 当前应用的微博 APP_KEY，第三方应用应该使用自己的 APP_KEY 替换该 APP_KEY */
     public static final String APP_KEY      = "1776100597";
 
+    //当前应用的tencent APP_ID
+    public static final String APP_ID_TENCENT = "1104706497";
+
     /**
      * 当前 DEMO 应用的回调页，第三方应用可以使用自己的回调页。
      *

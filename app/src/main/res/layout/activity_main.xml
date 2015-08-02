@@ -89,9 +89,22 @@
         android:layout_alignTop="@+id/toggleButton_weibo"
         android:layout_toRightOf="@+id/toggleButton_weibo"
         android:layout_toEndOf="@+id/toggleButton_weibo"
-        android:layout_marginLeft="71dp"
-        android:layout_marginStart="71dp" />
+        android:layout_marginLeft="60dp"
+        android:layout_marginStart="60dp" />
 
+    <ToggleButton
+        android:textOn=""
+        android:textOff=""
+        android:background="@drawable/btn_share_qzone"
+        android:layout_width="35dp"
+        android:layout_height="35dp"
+        android:id="@+id/toggleButton_tencent"
+        android:checked="false"
+        android:layout_below="@+id/horizontalScrollView"
+        android:layout_toRightOf="@+id/toggleButton_wechat"
+        android:layout_toEndOf="@+id/toggleButton_wechat"
+        android:layout_marginLeft="60dp"
+        android:layout_marginStart="60dp" />
 
 </RelativeLayout>
 

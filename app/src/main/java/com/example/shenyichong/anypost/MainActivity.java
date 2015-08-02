@@ -3,6 +3,7 @@ package com.example.shenyichong.anypost;
 import android.app.Activity;
 import android.app.NotificationManager;
 import android.content.ClipData;
+import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
@@ -16,7 +17,6 @@ import android.os.Environment;
 import android.provider.MediaStore;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.view.GestureDetectorCompat;
-import android.content.ClipboardManager;
 import android.text.Editable;
 import android.text.TextUtils;
 import android.text.TextWatcher;
@@ -50,12 +50,18 @@ import com.sina.weibo.sdk.openapi.models.ErrorInfo;
 import com.sina.weibo.sdk.openapi.models.Status;
 import com.sina.weibo.sdk.openapi.models.StatusList;
 import com.sina.weibo.sdk.utils.LogUtil;
+import com.tencent.connect.share.QQShare;
 import com.tencent.mm.sdk.modelmsg.SendMessageToWX;
 import com.tencent.mm.sdk.modelmsg.WXImageObject;
 import com.tencent.mm.sdk.modelmsg.WXMediaMessage;
 import com.tencent.mm.sdk.modelmsg.WXTextObject;
 import com.tencent.mm.sdk.openapi.IWXAPI;
 import com.tencent.mm.sdk.openapi.WXAPIFactory;
+import com.tencent.tauth.IUiListener;
+import com.tencent.tauth.Tencent;
+import com.tencent.tauth.UiError;
+
+import org.json.JSONObject;
 
 import java.io.File;
 import java.text.SimpleDateFormat;
@@ -81,10 +87,14 @@ public class MainActivity extends Activity implements
     private SsoHandler mSsoHandler;
     /** 封装了 "access_token"，"expires_in"，"refresh_token"，并提供了他们的管理功能  */
     private Oauth2AccessToken mAccessToken;
-    /** 微博微博分享接口实例 */
+    /** 用于分享等操作的API */
+    private StatusesAPI      mStatusesAPI;   //open API to update status
+    /** 微博注册接口API */
     private IWeiboShareAPI mWeiboShareAPI = null;
     /** IWXAPI 是第三方app与微信通信的openApi接口 */
     private IWXAPI mWeixinAPI ;
+    /** 腾讯OpenAPI接口实例 */
+    private Tencent mTencent;
 
     /** 分享图片 */
     private ImageView mImageView;
@@ -102,9 +112,9 @@ public class MainActivity extends Activity implements
     private ToggleButton     mWechatBtn;
     //微博选择分享按钮
     private ToggleButton     mWeiboBtn;
-    /** 用于获取微博信息流等操作的API */
-    private StatusesAPI      mStatusesAPI;   //open API to update status
-    //图片删除按钮
+    //qqzone选择分享按钮
+    private ToggleButton     mQqzoneBtn;
+
 
 
     //used to detect Gestures
@@ -129,6 +139,7 @@ public class MainActivity extends Activity implements
         mImageSelectBtn = (ImageButton)findViewById(R.id.image_select_button);
         mWechatBtn=(ToggleButton)findViewById(R.id.toggleButton_wechat);
         mWeiboBtn=(ToggleButton)findViewById(R.id.toggleButton_weibo);
+        mQqzoneBtn=(ToggleButton)findViewById(R.id.toggleButton_tencent);
         mImageView=null;
 
         mSharedBtn.setOnClickListener(this);
@@ -149,6 +160,14 @@ public class MainActivity extends Activity implements
                 return true;
             }
         });
+        //设置微博分享选择按钮背景
+        mWeiboBtn.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                mWeiboBtn.setChecked(isChecked);
+                mWeiboBtn.setBackgroundResource(isChecked ? R.drawable.btn_share_weibo : R.drawable.btn_share_weibo_unselected);
+            }
+        });
         //设置微信分享选择按钮背景
         mWechatBtn.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
@@ -157,12 +176,12 @@ public class MainActivity extends Activity implements
                 mWechatBtn.setBackgroundResource(isChecked ? R.drawable.btn_share_weixin_quan : R.drawable.btn_share_weixin_quan_unselected);
             }
         });
-        //设置微博分享选择按钮背景
-        mWeiboBtn.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+        //设置qqzone分享选择按钮背景
+        mQqzoneBtn.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                mWeiboBtn.setChecked(isChecked);
-                mWeiboBtn.setBackgroundResource(isChecked ? R.drawable.btn_share_weibo : R.drawable.btn_share_weibo_unselected);
+                mQqzoneBtn.setChecked(isChecked);
+                mQqzoneBtn.setBackgroundResource(isChecked ? R.drawable.btn_share_qzone : R.drawable.btn_share_qzone_unselected);
             }
         });
 
@@ -180,6 +199,9 @@ public class MainActivity extends Activity implements
         mWeixinAPI = WXAPIFactory.createWXAPI(this,Constants.APP_ID,true);
         //将应用注册到微信
         mWeixinAPI.registerApp(Constants.APP_ID);
+
+        //获取tencent OpenAPI实例
+        mTencent = Tencent.createInstance(Constants.APP_ID_TENCENT, this.getApplicationContext());
 
         // SSO 授权, 仅客户端
         mWeiboBtn.setOnClickListener(new View.OnClickListener() {
@@ -367,6 +389,10 @@ public class MainActivity extends Activity implements
         else if (mSsoHandler != null) {
             mSsoHandler.authorizeCallBack(requestCode, resultCode, data);
         }
+
+        //为了让tencent API成功接收到回调，添加如下代码
+        else
+            mTencent.onActivityResult(requestCode, resultCode, data);
     }
 
     /**
@@ -510,6 +536,13 @@ public class MainActivity extends Activity implements
                         mWeixinAPI.sendReq(req);
                     }
                 }
+                if(mQqzoneBtn.isChecked() == true){
+                    final Bundle params = new Bundle();
+                    params.putInt(QQShare.SHARE_TO_QQ_KEY_TYPE, QQShare.SHARE_TO_QQ_TYPE_DEFAULT);
+                    params.putString(QQShare.SHARE_TO_QQ_TITLE, "要分享的标题");
+                    params.putString(QQShare.SHARE_TO_QQ_SUMMARY,  "要分享的摘要");
+                    mTencent.shareToQzone(MainActivity.this,params,new BaseUiListener());
+                }
                 NotificationCompat.Builder mBuilder =
                         new NotificationCompat.Builder(this)
                                 .setSmallIcon(R.drawable.ic_launcher)
@@ -534,6 +567,27 @@ public class MainActivity extends Activity implements
             startActivityForResult(i, RESULT_LOAD_IMAGE);
         }
 
+    }
+
+    //tencent API 回调接口
+    private class BaseUiListener implements IUiListener {
+        @Override
+        public void onComplete(JSONObject response) {
+            mBaseMessageText.setText("onComplete:");
+            mMessageText.setText(response.toString());
+            doComplete(response);
+        }
+        protected void doComplete(JSONObject values) {
+        }
+        @Override
+        public void onError(UiError e) {
+            showResult("onError:", "code:" + e.errorCode + ", msg:"
+                    + e.errorMessage + ", detail:" + e.errorDetail);
+        }
+        @Override
+        public void onCancel() {
+            showResult("onCancel", "");
+        }
     }
     /**
      * 微博 OpenAPI 回调接口。
