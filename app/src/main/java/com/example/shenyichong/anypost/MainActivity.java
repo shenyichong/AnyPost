@@ -50,7 +50,7 @@ import com.sina.weibo.sdk.openapi.models.ErrorInfo;
 import com.sina.weibo.sdk.openapi.models.Status;
 import com.sina.weibo.sdk.openapi.models.StatusList;
 import com.sina.weibo.sdk.utils.LogUtil;
-import com.tencent.connect.share.QQShare;
+import com.tencent.connect.share.QzoneShare;
 import com.tencent.mm.sdk.modelmsg.SendMessageToWX;
 import com.tencent.mm.sdk.modelmsg.WXImageObject;
 import com.tencent.mm.sdk.modelmsg.WXMediaMessage;
@@ -60,8 +60,6 @@ import com.tencent.mm.sdk.openapi.WXAPIFactory;
 import com.tencent.tauth.IUiListener;
 import com.tencent.tauth.Tencent;
 import com.tencent.tauth.UiError;
-
-import org.json.JSONObject;
 
 import java.io.File;
 import java.text.SimpleDateFormat;
@@ -225,8 +223,9 @@ public class MainActivity extends Activity implements
             mWeiboBtn.setBackgroundResource(R.drawable.btn_share_weibo);
         }
 
-        //微信
+
         mWechatBtn.setChecked(true);
+        mQqzoneBtn.setChecked(true);
 
         // Watch EditText
         editText.addTextChangedListener(new TextWatcher() {
@@ -391,7 +390,7 @@ public class MainActivity extends Activity implements
         }
 
         //为了让tencent API成功接收到回调，添加如下代码
-        else
+        else if(mTencent != null)
             mTencent.onActivityResult(requestCode, resultCode, data);
     }
 
@@ -459,7 +458,7 @@ public class MainActivity extends Activity implements
         if (R.id.share_button == v.getId()) {
             // sendMultiMessage(true, true); //使用微博发博器进行微博发送
             //发送微博功能实现
-            if(mWeiboBtn.isChecked() || mWechatBtn.isChecked()){
+            if(mWeiboBtn.isChecked() || mWechatBtn.isChecked() || mQqzoneBtn.isChecked()){
                 if (mWeiboBtn.isChecked() == true){
                     mStatusesAPI = new StatusesAPI(this, Constants.APP_KEY, mAccessToken);
                     mImageView = (ImageView) findViewById(R.id.image_selected);
@@ -502,9 +501,8 @@ public class MainActivity extends Activity implements
                         Bitmap thumbBmp = Bitmap.createScaledBitmap(bmp, 150, 150, true);
                         //bmp.recycle();
                         msg.thumbData = Util.bmpToByteArray(thumbBmp, true);  // 设置缩略图（大小不能够超过32KB）
-
-//                   msg.title = String.valueOf(editText.getText());
-//                   msg.description = String.valueOf(editText.getText());
+                        //msg.title = String.valueOf(editText.getText());
+                        //msg.description = String.valueOf(editText.getText());
 
                         SendMessageToWX.Req req = new SendMessageToWX.Req();
                         req.transaction = "img" + System.currentTimeMillis(); // transaction字段用于唯一标识一个请求
@@ -538,10 +536,30 @@ public class MainActivity extends Activity implements
                 }
                 if(mQqzoneBtn.isChecked() == true){
                     final Bundle params = new Bundle();
-                    params.putInt(QQShare.SHARE_TO_QQ_KEY_TYPE, QQShare.SHARE_TO_QQ_TYPE_DEFAULT);
-                    params.putString(QQShare.SHARE_TO_QQ_TITLE, "要分享的标题");
-                    params.putString(QQShare.SHARE_TO_QQ_SUMMARY,  "要分享的摘要");
-                    mTencent.shareToQzone(MainActivity.this,params,new BaseUiListener());
+                    IUiListener iUiListener = new IUiListener() {
+                        @Override
+                        public void onComplete(Object o) {
+                            Toast.makeText(MainActivity.this, "朋友圈发送成功！", Toast.LENGTH_LONG).show();
+                        }
+
+                        @Override
+                        public void onError(UiError uiError) {
+                            Toast.makeText(MainActivity.this, ("onError:"+ "code:" + uiError.errorCode + ", msg:"
+                                    + uiError.errorMessage + ", detail:").toString() + uiError.errorDetail, Toast.LENGTH_LONG).show();
+                           // Toast.makeText(MainActivity.this, "朋友圈发送失败！", Toast.LENGTH_LONG).show();
+                        }
+
+                        @Override
+                        public void onCancel() {
+                            Toast.makeText(MainActivity.this, "朋友圈发送取消！", Toast.LENGTH_LONG).show();
+                    }
+                } ;
+                    params.putInt(QzoneShare.SHARE_TO_QZONE_KEY_TYPE, QzoneShare.SHARE_TO_QZONE_TYPE_IMAGE_TEXT);
+                    params.putString(QzoneShare.SHARE_TO_QQ_TITLE, "要分享的标题");
+                    params.putString(QzoneShare.SHARE_TO_QQ_SUMMARY,  "要分享的摘要");
+                    //params.putString(QzoneShare.SHARE_TO_QQ_TARGET_URL,);
+                    //params.putString(QzoneShare.SHARE_TO_QQ_TARGET_URL,"http://www.baidu.com");
+                    mTencent.shareToQzone(MainActivity.this, params, iUiListener);
                 }
                 NotificationCompat.Builder mBuilder =
                         new NotificationCompat.Builder(this)
@@ -569,26 +587,6 @@ public class MainActivity extends Activity implements
 
     }
 
-    //tencent API 回调接口
-    private class BaseUiListener implements IUiListener {
-        @Override
-        public void onComplete(JSONObject response) {
-            mBaseMessageText.setText("onComplete:");
-            mMessageText.setText(response.toString());
-            doComplete(response);
-        }
-        protected void doComplete(JSONObject values) {
-        }
-        @Override
-        public void onError(UiError e) {
-            showResult("onError:", "code:" + e.errorCode + ", msg:"
-                    + e.errorMessage + ", detail:" + e.errorDetail);
-        }
-        @Override
-        public void onCancel() {
-            showResult("onCancel", "");
-        }
-    }
     /**
      * 微博 OpenAPI 回调接口。
      */
