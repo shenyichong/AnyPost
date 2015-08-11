@@ -63,6 +63,7 @@ import com.tencent.tauth.UiError;
 
 import java.io.File;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 
 
@@ -121,6 +122,8 @@ public class MainActivity extends Activity implements
     private InputMethodManager imm;
     //Uri to save camera photo
     private Uri  fileUri;
+    //Path to show image location
+    String picturePath;
 
     ImageLoaderConfiguration mUILconfig;
 
@@ -323,7 +326,7 @@ public class MainActivity extends Activity implements
             cursor.moveToFirst();
 
             int columnIndex = cursor.getColumnIndex(filePathColumn[0]);
-            String picturePath = cursor.getString(columnIndex);
+            picturePath = cursor.getString(columnIndex);
             cursor.close();
             //设置图片尺寸，防止图片过大无法显示
             BitmapFactory.Options options = new BitmapFactory.Options();
@@ -535,11 +538,13 @@ public class MainActivity extends Activity implements
                     }
                 }
                 if(mQqzoneBtn.isChecked() == true){
+
                     final Bundle params = new Bundle();
                     IUiListener iUiListener = new IUiListener() {
                         @Override
                         public void onComplete(Object o) {
-                            Toast.makeText(MainActivity.this, "朋友圈发送成功！", Toast.LENGTH_LONG).show();
+                            //Toast.makeText(MainActivity.this, "朋友圈发送成功！", Toast.LENGTH_LONG).show();
+                            Toast.makeText(MainActivity.this, o.toString(), Toast.LENGTH_LONG).show();
                         }
 
                         @Override
@@ -554,11 +559,15 @@ public class MainActivity extends Activity implements
                             Toast.makeText(MainActivity.this, "朋友圈发送取消！", Toast.LENGTH_LONG).show();
                     }
                 } ;
-                    params.putInt(QzoneShare.SHARE_TO_QZONE_KEY_TYPE, QzoneShare.SHARE_TO_QZONE_TYPE_IMAGE_TEXT);
-                    params.putString(QzoneShare.SHARE_TO_QQ_TITLE, "要分享的标题");
-                    params.putString(QzoneShare.SHARE_TO_QQ_SUMMARY,  "要分享的摘要");
-                    //params.putString(QzoneShare.SHARE_TO_QQ_TARGET_URL,);
-                    //params.putString(QzoneShare.SHARE_TO_QQ_TARGET_URL,"http://www.baidu.com");
+                    params.putInt(QzoneShare.SHARE_TO_QZONE_KEY_TYPE, QzoneShare.SHARE_TO_QZONE_TYPE_APP);
+                    params.putString(QzoneShare.SHARE_TO_QQ_TITLE, "来自AnyPost的分享");
+                    params.putString(QzoneShare.SHARE_TO_QQ_SUMMARY,  editText.getText().toString());
+                    params.putString(QzoneShare.SHARE_TO_QQ_TARGET_URL, "http://www.baidu.com");
+                    ArrayList<String> imageURL = new ArrayList<String>();
+                    imageURL.add("http://upload.news.cecb2b.com/2015/0409/1428576251613.png");
+                    params.putStringArrayList(QzoneShare.SHARE_TO_QQ_IMAGE_URL, imageURL);
+                    //Toast.makeText(MainActivity.this, picturePath, Toast.LENGTH_LONG).show();
+                    //params.putString(QzoneShare.SHARE_TO_QQ_IMAGE_LOCAL_URL, picturePath);
                     mTencent.shareToQzone(MainActivity.this, params, iUiListener);
                 }
                 NotificationCompat.Builder mBuilder =
