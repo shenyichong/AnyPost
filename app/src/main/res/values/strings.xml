@@ -10,7 +10,12 @@
     <string name="publish_status_weibo_fail">AnyPost微博发布失败</string>
     <string name="publish_status_weibo_done">AnyPost微博发布成功</string>
     <string name="publish_status_wechat_fail">AnyPost朋友圈发布失败</string>
+    <string name="publish_status_wechat_cancel">AnyPost朋友圈发布取消</string>
     <string name="publish_status_wechat_done">AnyPost朋友圈发布成功</string>
+    <string name="publish_status_qqzone_fail">AnyPost QQ空间发布失败</string>
+    <string name="publish_status_qqzone_cancel">AnyPost QQ空间发布取消</string>
+    <string name="publish_status_qqzone_done">AnyPost QQ空间发布成功</string>
+    <string name="notice_select_picture_qqzone">请选择要分享到QQ空间的图片</string>
     <string name="please_select_social_network">请选择分享的社交网络</string>
     <string name="copy_to_clipboard">已将评论复制到剪贴板</string>
 

@@ -19,7 +19,7 @@ public interface Constants {
     public static final String APP_KEY      = "1776100597";
 
     //当前应用的tencent APP_ID
-    public static final String APP_ID_TENCENT = "1104706497";
+    public static final String APP_ID_TENCENT = "1104736433";
 
     /**
      * 当前 DEMO 应用的回调页，第三方应用可以使用自己的回调页。

@@ -50,7 +50,7 @@ import com.sina.weibo.sdk.openapi.models.ErrorInfo;
 import com.sina.weibo.sdk.openapi.models.Status;
 import com.sina.weibo.sdk.openapi.models.StatusList;
 import com.sina.weibo.sdk.utils.LogUtil;
-import com.tencent.connect.share.QzoneShare;
+import com.tencent.connect.share.QQShare;
 import com.tencent.mm.sdk.modelmsg.SendMessageToWX;
 import com.tencent.mm.sdk.modelmsg.WXImageObject;
 import com.tencent.mm.sdk.modelmsg.WXMediaMessage;
@@ -63,7 +63,6 @@ import com.tencent.tauth.UiError;
 
 import java.io.File;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Date;
 
 
@@ -512,6 +511,7 @@ public class MainActivity extends Activity implements
                         req.message = msg;
                         req.scene = SendMessageToWX.Req.WXSceneTimeline;
                         mWeixinAPI.sendReq(req);
+                        //copy editText into clipboard
                         ClipboardManager cmb = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
                         ClipData cd = ClipData.newPlainText("text", editText.getText().toString());
                         cmb.setPrimaryClip(cd);
@@ -543,32 +543,83 @@ public class MainActivity extends Activity implements
                     IUiListener iUiListener = new IUiListener() {
                         @Override
                         public void onComplete(Object o) {
-                            //Toast.makeText(MainActivity.this, "朋友圈发送成功！", Toast.LENGTH_LONG).show();
-                            Toast.makeText(MainActivity.this, o.toString(), Toast.LENGTH_LONG).show();
+                            Toast.makeText(MainActivity.this, "QQ空间发送成功！", Toast.LENGTH_LONG).show();
+                            //Toast.makeText(MainActivity.this, o.toString(), Toast.LENGTH_LONG).show();
+                            //通知栏显示AnyPost发送成功
+                            NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(MainActivity.this)
+                                    .setSmallIcon(R.drawable.ic_launcher)
+                                    .setContentTitle(getString(R.string.publish_status_qqzone_done))
+                                    .setContentText(getString(R.string.publish_status_qqzone_done));;
+                            mBuilder.setTicker(getString(R.string.publish_status_qqzone_done));
+                            NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+                            mNotificationManager.cancel(MID_PRE);
+                            mNotificationManager.notify(null, MID_POST, mBuilder.build());
+                            //通知栏显示1s后自动关闭
+                            try {
+                                Thread.currentThread().sleep(1000);//延时的时间，毫秒
+                            } catch (InterruptedException ee) {
+                                ee.printStackTrace();
+                            }
+                            mNotificationManager.cancel(MID_POST);
                         }
 
                         @Override
                         public void onError(UiError uiError) {
                             Toast.makeText(MainActivity.this, ("onError:"+ "code:" + uiError.errorCode + ", msg:"
                                     + uiError.errorMessage + ", detail:").toString() + uiError.errorDetail, Toast.LENGTH_LONG).show();
-                           // Toast.makeText(MainActivity.this, "朋友圈发送失败！", Toast.LENGTH_LONG).show();
+                            // Toast.makeText(MainActivity.this, "QQ空间发送失败！", Toast.LENGTH_LONG).show();
+                            NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(MainActivity.this)
+                                    .setSmallIcon(R.drawable.ic_launcher)
+                                    .setContentTitle(getString(R.string.publish_status_qqzone_fail))
+                                    .setContentText(getString(R.string.publish_status_qqzone_fail));;
+                            mBuilder.setTicker(getString(R.string.publish_status_qqzone_fail));
+                            NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+                            mNotificationManager.cancel(MID_PRE);
+                            mNotificationManager.notify(null, MID_POST, mBuilder.build());
+                            //通知栏显示1s后自动关闭
+                            try {
+                                Thread.currentThread().sleep(1000);//延时的时间，毫秒
+                            } catch (InterruptedException ee) {
+                                ee.printStackTrace();
+                            }
+                            mNotificationManager.cancel(MID_POST);
                         }
 
                         @Override
                         public void onCancel() {
-                            Toast.makeText(MainActivity.this, "朋友圈发送取消！", Toast.LENGTH_LONG).show();
+                            Toast.makeText(MainActivity.this, "QQ空间发送取消！", Toast.LENGTH_LONG).show();
+                            //通知栏显示AnyPost发送取消
+                            NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(MainActivity.this)
+                                    .setSmallIcon(R.drawable.ic_launcher)
+                                    .setContentTitle(getString(R.string.publish_status_qqzone_cancel))
+                                    .setContentText(getString(R.string.publish_status_qqzone_cancel));;
+                            mBuilder.setTicker(getString(R.string.publish_status_qqzone_cancel));
+                            NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+                            mNotificationManager.cancel(MID_PRE);
+                            mNotificationManager.notify(null, MID_POST, mBuilder.build());
+                            //通知栏显示1s后自动关闭
+                            try {
+                                Thread.currentThread().sleep(1000);//延时的时间，毫秒
+                            } catch (InterruptedException ee) {
+                                ee.printStackTrace();
+                            }
+                            mNotificationManager.cancel(MID_POST);
                     }
                 } ;
-                    params.putInt(QzoneShare.SHARE_TO_QZONE_KEY_TYPE, QzoneShare.SHARE_TO_QZONE_TYPE_APP);
-                    params.putString(QzoneShare.SHARE_TO_QQ_TITLE, "来自AnyPost的分享");
-                    params.putString(QzoneShare.SHARE_TO_QQ_SUMMARY,  editText.getText().toString());
-                    params.putString(QzoneShare.SHARE_TO_QQ_TARGET_URL, "http://www.baidu.com");
-                    ArrayList<String> imageURL = new ArrayList<String>();
-                    imageURL.add("http://upload.news.cecb2b.com/2015/0409/1428576251613.png");
-                    params.putStringArrayList(QzoneShare.SHARE_TO_QQ_IMAGE_URL, imageURL);
-                    //Toast.makeText(MainActivity.this, picturePath, Toast.LENGTH_LONG).show();
-                    //params.putString(QzoneShare.SHARE_TO_QQ_IMAGE_LOCAL_URL, picturePath);
-                    mTencent.shareToQzone(MainActivity.this, params, iUiListener);
+                    if(picturePath == null){
+                        Toast.makeText(MainActivity.this,R.string.notice_select_picture_qqzone , Toast.LENGTH_LONG).show();
+                        return;
+                    }
+                    params.putInt(QQShare.SHARE_TO_QQ_KEY_TYPE, QQShare.SHARE_TO_QQ_TYPE_IMAGE);//!important! select this to avoid provide target URL(QQShare.SHARE_TO_QQ_TYPE_DEFAULT)
+                    params.putString(QQShare.SHARE_TO_QQ_IMAGE_LOCAL_URL, picturePath);
+                    params.putString(QQShare.SHARE_TO_QQ_APP_NAME,  "AnyPost");
+                    params.putInt(QQShare.SHARE_TO_QQ_EXT_INT, QQShare.SHARE_TO_QQ_FLAG_QZONE_AUTO_OPEN); //!important! add this to share to qqzone
+                    mTencent.shareToQQ(MainActivity.this, params, iUiListener);
+                    //copy editText into clipboard
+                    ClipboardManager cmb = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
+                    ClipData cd = ClipData.newPlainText("text", editText.getText().toString());
+                    cmb.setPrimaryClip(cd);
+                    Toast.makeText(MainActivity.this, R.string.copy_to_clipboard, Toast.LENGTH_LONG).show();
                 }
                 NotificationCompat.Builder mBuilder =
                         new NotificationCompat.Builder(this)

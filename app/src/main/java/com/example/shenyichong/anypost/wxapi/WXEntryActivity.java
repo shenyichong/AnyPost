@@ -81,9 +81,9 @@ public class WXEntryActivity extends Activity implements IWXAPIEventHandler{
                 //在通知栏显示AnyPost微信朋友圈发布失败
                 NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(this)
                         .setSmallIcon(R.drawable.ic_launcher)
-                        .setContentTitle(getString(R.string.publish_status_wechat_fail))
-                        .setContentText(getString(R.string.publish_status_wechat_fail));;
-                mBuilder.setTicker(getString(R.string.publish_status_wechat_fail));
+                        .setContentTitle(getString(R.string.publish_status_wechat_cancel))
+                        .setContentText(getString(R.string.publish_status_wechat_cancel));;
+                mBuilder.setTicker(getString(R.string.publish_status_wechat_cancel));
                 NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
                 mNotificationManager.cancel(MID_PRE);
                 mNotificationManager.notify(null, MID_POST, mBuilder.build());
