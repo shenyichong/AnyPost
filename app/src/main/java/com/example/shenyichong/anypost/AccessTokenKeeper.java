@@ -17,6 +17,7 @@ public class AccessTokenKeeper {
 
     private static final String KEY_UID           = "uid";
     private static final String KEY_ACCESS_TOKEN  = "access_token";
+    private static final String KEY_REFRESH_TOKEN = "refresh_token";
     private static final String KEY_EXPIRES_IN    = "expires_in";
 
     /**
@@ -35,6 +36,7 @@ public class AccessTokenKeeper {
         editor.putString(KEY_UID, token.getUid());
         editor.putString(KEY_ACCESS_TOKEN, token.getToken());
         editor.putLong(KEY_EXPIRES_IN, token.getExpiresTime());
+        editor.putString(KEY_REFRESH_TOKEN,token.getRefreshToken());
         editor.commit();
     }
 
@@ -54,6 +56,7 @@ public class AccessTokenKeeper {
         SharedPreferences pref = context.getSharedPreferences(PREFERENCES_NAME, Context.MODE_APPEND);
         token.setUid(pref.getString(KEY_UID, ""));
         token.setToken(pref.getString(KEY_ACCESS_TOKEN, ""));
+        token.setRefreshToken(pref.getString(KEY_REFRESH_TOKEN,""));
         token.setExpiresTime(pref.getLong(KEY_EXPIRES_IN, 0));
         return token;
     }

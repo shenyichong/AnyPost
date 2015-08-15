@@ -100,6 +100,10 @@ public class MainActivity extends Activity implements
     private int mHeight;
     private int mWidth;
 
+    //flag
+    private boolean text_exit;
+    private boolean image_exit;
+
     //private Uri electedImage_Uri;
     private EditText editText;
     /** 分享按钮 */
@@ -164,7 +168,6 @@ public class MainActivity extends Activity implements
         mWeiboBtn.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                mWeiboBtn.setChecked(isChecked);
                 mWeiboBtn.setBackgroundResource(isChecked ? R.drawable.btn_share_weibo : R.drawable.btn_share_weibo_unselected);
             }
         });
@@ -172,7 +175,6 @@ public class MainActivity extends Activity implements
         mWechatBtn.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                mWechatBtn.setChecked(isChecked);
                 mWechatBtn.setBackgroundResource(isChecked ? R.drawable.btn_share_weixin_quan : R.drawable.btn_share_weixin_quan_unselected);
             }
         });
@@ -180,7 +182,6 @@ public class MainActivity extends Activity implements
         mQqzoneBtn.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                mQqzoneBtn.setChecked(isChecked);
                 mQqzoneBtn.setBackgroundResource(isChecked ? R.drawable.btn_share_qzone : R.drawable.btn_share_qzone_unselected);
             }
         });
@@ -216,18 +217,25 @@ public class MainActivity extends Activity implements
 
         //设置社交网络选择按钮
         //微博
-        if(mAccessToken == null || mAccessToken.isSessionValid() == false){
+        if(mAccessToken == null || mAccessToken.isSessionValid() == false ){
             mWeiboBtn.setChecked(false);
             mWeiboBtn.setBackgroundResource(R.drawable.btn_share_weibo_unselected);
         }
         else{
+            //refresh token operation
+            //to be defined
+            //mAccessToken.setToken(mAccessToken.getRefreshToken());
+
             mWeiboBtn.setChecked(true);
             mWeiboBtn.setBackgroundResource(R.drawable.btn_share_weibo);
         }
 
-
         mWechatBtn.setChecked(true);
         mQqzoneBtn.setChecked(true);
+
+        //flag
+        text_exit = false;
+        image_exit = false;
 
         // Watch EditText
         editText.addTextChangedListener(new TextWatcher() {
@@ -238,10 +246,17 @@ public class MainActivity extends Activity implements
 
             @Override
             public void afterTextChanged(Editable s) {
-                if("".equals(editText.getText().toString().trim())) //if(editText.getText().toString().trim().isEmpty())
-                    mSharedBtn.setEnabled(false);
-                else
+                if("".equals(editText.getText().toString().trim())) { //if(editText.getText().toString().trim().isEmpty())
+                    text_exit = false;
+                    if (image_exit)
+                        mSharedBtn.setEnabled(true);
+                    else
+                        mSharedBtn.setEnabled(false);
+                }
+                else{
+                    text_exit = true;
                     mSharedBtn.setEnabled(true);
+                }
             }
         });
 
@@ -315,41 +330,55 @@ public class MainActivity extends Activity implements
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
-        if (requestCode == RESULT_LOAD_IMAGE  && resultCode == RESULT_OK && null != data) {
-            Uri selectedImage = data.getData();
-            //electedImage_Uri = selectedImage;
-            String[] filePathColumn = { MediaStore.Images.Media.DATA };
+        if (requestCode == RESULT_LOAD_IMAGE && null != data) {
+            if(resultCode == RESULT_OK ) {
+                Uri selectedImage = data.getData();
+                //electedImage_Uri = selectedImage;
+                String[] filePathColumn = {MediaStore.Images.Media.DATA};
 
-            Cursor cursor = getContentResolver().query(selectedImage,
-                    filePathColumn, null, null, null);
-            cursor.moveToFirst();
+                Cursor cursor = getContentResolver().query(selectedImage,
+                        filePathColumn, null, null, null);
+                cursor.moveToFirst();
 
-            int columnIndex = cursor.getColumnIndex(filePathColumn[0]);
-            picturePath = cursor.getString(columnIndex);
-            cursor.close();
-            //设置图片尺寸，防止图片过大无法显示
-            BitmapFactory.Options options = new BitmapFactory.Options();
-            options.inJustDecodeBounds = true;
-            Bitmap Image = BitmapFactory.decodeFile(picturePath,options);
-            mSampleSize = 1;
-            mHeight = options.outHeight;
-            mWidth  = options.outWidth;
-            while(mHeight > 4096 || mWidth > 4096){
-                mHeight /= 2; mWidth /= 2;
-                mSampleSize *= 2;
+                int columnIndex = cursor.getColumnIndex(filePathColumn[0]);
+                picturePath = cursor.getString(columnIndex);
+                cursor.close();
+                //设置图片尺寸，防止图片过大无法显示
+                BitmapFactory.Options options = new BitmapFactory.Options();
+                options.inJustDecodeBounds = true;
+                Bitmap Image = BitmapFactory.decodeFile(picturePath, options);
+                mSampleSize = 1;
+                mHeight = options.outHeight;
+                mWidth = options.outWidth;
+                while (mHeight > 4096 || mWidth > 4096) {
+                    mHeight /= 2;
+                    mWidth /= 2;
+                    mSampleSize *= 2;
+                }
+                options.inSampleSize = mSampleSize;
+                //后续可以根据layout设置固定尺寸
+                options.inJustDecodeBounds = false;
+                Image = BitmapFactory.decodeFile(picturePath, options);
+                //设置图片展示layout,need to be modified
+                RelativeLayout imageShower = (RelativeLayout) findViewById(R.id.image_shower);
+                imageShower.removeAllViews();
+                ImageView view = addImageView(Image);
+                imageShower.addView(view);
+                imageShower.addView(addDeleteView(view));
+                // if set height and width here:imageShower.addView(addDeleteView(view),60,60);
+                // then in function addDeleteView RelativeLayout.LayoutParams can't be reconfigured,such as relative position
+
+                image_exit = true;
+                mSharedBtn.setEnabled(true);
+            }else if(resultCode == RESULT_CANCELED){
+                if(mImageView == null){
+                    image_exit = false;
+                    if(text_exit)
+                        mSharedBtn.setEnabled(true);
+                    else
+                        mSharedBtn.setEnabled(false);
+                }
             }
-            options.inSampleSize = mSampleSize;
-            //后续可以根据layout设置固定尺寸
-            options.inJustDecodeBounds = false;
-            Image = BitmapFactory.decodeFile(picturePath,options);
-            //设置图片展示layout,need to be modified
-            RelativeLayout imageShower = (RelativeLayout)findViewById(R.id.image_shower);
-            imageShower.removeAllViews();
-            ImageView view = addImageView(Image);
-            imageShower.addView(view);
-            imageShower.addView(addDeleteView(view));
-            // if set height and width here:imageShower.addView(addDeleteView(view),60,60);
-            // then in function addDeleteView RelativeLayout.LayoutParams can't be reconfigured,such as relative position
         }else if(requestCode == CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE){
             if (resultCode == RESULT_OK) {
                 String photoPath =  getRealPathFromURI(fileUri);
@@ -377,10 +406,27 @@ public class MainActivity extends Activity implements
                 ImageView view = addImageView(Image);
                 imageShower.addView(view);
                 imageShower.addView(addDeleteView(view));
+
+                image_exit = true;
+                mSharedBtn.setEnabled(true);
             } else if (resultCode == RESULT_CANCELED) {
                 // User cancelled the image capture
+                if(mImageView == null){
+                    image_exit = false;
+                    if(text_exit)
+                        mSharedBtn.setEnabled(true);
+                    else
+                        mSharedBtn.setEnabled(false);
+                }
             } else {
                 // Image capture failed, advise user
+                if(mImageView == null){
+                    image_exit = false;
+                    if(text_exit)
+                        mSharedBtn.setEnabled(true);
+                    else
+                        mSharedBtn.setEnabled(false);
+                }
             }
 
         }
@@ -466,7 +512,10 @@ public class MainActivity extends Activity implements
                     mImageView = (ImageView) findViewById(R.id.image_selected);
                     if(mImageView != null)
                         //发送图片微博
-                        mStatusesAPI.upload(editText.getText().toString(), ((BitmapDrawable)mImageView.getDrawable()).getBitmap(), null, null, mListener);
+                        if("".equals(editText.getText().toString().trim()))//when no text typed
+                            mStatusesAPI.upload(getString(R.string.share_picture_without_text), ((BitmapDrawable)mImageView.getDrawable()).getBitmap(), null, null, mListener);
+                        else
+                            mStatusesAPI.upload(editText.getText().toString(), ((BitmapDrawable)mImageView.getDrawable()).getBitmap(), null, null, mListener);
                         // 如何发送原图到微博？ http://stackoverflow.com/questions/3879992/get-bitmap-from-an-uri-android
                         // mStatusesAPI.upload(editText.getText().toString(), getThumbnail(electedImage_Uri) , null, null, mListener);
                     else
@@ -511,12 +560,14 @@ public class MainActivity extends Activity implements
                         req.message = msg;
                         req.scene = SendMessageToWX.Req.WXSceneTimeline;
                         mWeixinAPI.sendReq(req);
-                        //copy editText into clipboard
-                        ClipboardManager cmb = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
-                        ClipData cd = ClipData.newPlainText("text", editText.getText().toString());
-                        cmb.setPrimaryClip(cd);
-                        Toast.makeText(MainActivity.this, R.string.copy_to_clipboard, Toast.LENGTH_LONG).show();
 
+                        //copy editText into clipboard
+                        if("".equals(editText.getText().toString().trim()) == false){
+                            ClipboardManager cmb = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
+                            ClipData cd = ClipData.newPlainText("text", editText.getText().toString());
+                            cmb.setPrimaryClip(cd);
+                            Toast.makeText(MainActivity.this, R.string.copy_to_clipboard, Toast.LENGTH_LONG).show();
+                        }
                     } else {
                         //发送文字朋友圈
                         // 初始化一个WXTextObject对象
@@ -616,10 +667,12 @@ public class MainActivity extends Activity implements
                     params.putInt(QQShare.SHARE_TO_QQ_EXT_INT, QQShare.SHARE_TO_QQ_FLAG_QZONE_AUTO_OPEN); //!important! add this to share to qqzone
                     mTencent.shareToQQ(MainActivity.this, params, iUiListener);
                     //copy editText into clipboard
-                    ClipboardManager cmb = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
-                    ClipData cd = ClipData.newPlainText("text", editText.getText().toString());
-                    cmb.setPrimaryClip(cd);
-                    Toast.makeText(MainActivity.this, R.string.copy_to_clipboard, Toast.LENGTH_LONG).show();
+                    if("".equals(editText.getText().toString().trim()) == false) {
+                        ClipboardManager cmb = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
+                        ClipData cd = ClipData.newPlainText("text", editText.getText().toString());
+                        cmb.setPrimaryClip(cd);
+                        Toast.makeText(MainActivity.this, R.string.copy_to_clipboard, Toast.LENGTH_LONG).show();
+                    }
                 }
                 NotificationCompat.Builder mBuilder =
                         new NotificationCompat.Builder(this)
@@ -694,19 +747,31 @@ public class MainActivity extends Activity implements
         }
         @Override
         public void onWeiboException(WeiboException e) {
-            //在通知栏显示AnyPost发布失败
-            NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(MainActivity.this)
-                    .setSmallIcon(R.drawable.ic_launcher)
-                    .setContentTitle(getString(R.string.publish_status_weibo_fail))
-                    .setContentText(getString(R.string.publish_status_weibo_fail));;
+
+            LogUtil.e(TAG, e.getMessage());
+            ErrorInfo info = ErrorInfo.parse(e.getMessage());
+            NotificationCompat.Builder mBuilder;
+            //if weibo access token expired, reauthorization needed.
+            if(info.toString() == ""){
+                Toast.makeText(MainActivity.this, "测试进来了没", Toast.LENGTH_LONG).show();
+                //在通知栏显示AnyPost发布失败，提示需要进行重新授权并调起授权页面。
+                mBuilder = new NotificationCompat.Builder(MainActivity.this)
+                        .setSmallIcon(R.drawable.ic_launcher)
+                        .setContentTitle(getString(R.string.publish_status_weibo_fail_and_reauth))
+                        .setContentText(getString(R.string.publish_status_weibo_fail_and_reauth));
+                //mSsoHandler.authorize(new AuthListener());
+            }else {
+                Toast.makeText(MainActivity.this, info.toString(), Toast.LENGTH_LONG).show();
+                //在通知栏显示AnyPost发布失败
+                mBuilder = new NotificationCompat.Builder(MainActivity.this)
+                        .setSmallIcon(R.drawable.ic_launcher)
+                        .setContentTitle(getString(R.string.publish_status_weibo_fail))
+                        .setContentText(getString(R.string.publish_status_weibo_fail));
+            }
             mBuilder.setTicker(getString(R.string.publish_status_weibo_fail));
             NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
             mNotificationManager.cancel(MID_PRE);
             mNotificationManager.notify(null, MID_POST, mBuilder.build());
-
-            LogUtil.e(TAG, e.getMessage());
-            ErrorInfo info = ErrorInfo.parse(e.getMessage());
-            Toast.makeText(MainActivity.this, info.toString(), Toast.LENGTH_LONG).show();
 
             //通知栏显示1s后自动关闭
             try {
@@ -715,6 +780,7 @@ public class MainActivity extends Activity implements
                 ee.printStackTrace();
             }
             mNotificationManager.cancel(MID_POST);
+
         }
     };
 
@@ -774,7 +840,7 @@ public class MainActivity extends Activity implements
 
     private ImageButton addDeleteView(ImageView view){
         ImageButton imageBtn = new ImageButton(this);
-        RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams(60, 60);
+        RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams(80, 80);
         lp.addRule(RelativeLayout.ALIGN_RIGHT, view.getId());
         lp.addRule(RelativeLayout.ALIGN_TOP, view.getId());
 //        lp.leftMargin=100;
@@ -787,6 +853,11 @@ public class MainActivity extends Activity implements
             public void onClick(View v){
                 RelativeLayout imageShower = (RelativeLayout) findViewById(R.id.image_shower);
                 imageShower.removeAllViews();
+                image_exit = false;
+                if(text_exit)
+                    mSharedBtn.setEnabled(true);
+                else
+                    mSharedBtn.setEnabled(false);
             }
         });
         return imageBtn;

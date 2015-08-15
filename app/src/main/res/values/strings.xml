@@ -7,7 +7,9 @@
     <string name="button_publish">发布</string>
     <string name="publish_function">publish_function</string>
     <string name="publish_status">AnyPost发布中...</string>
+    <string name="share_picture_without_text">分享图片</string>
     <string name="publish_status_weibo_fail">AnyPost微博发布失败</string>
+    <string name="publish_status_weibo_fail_and_reauth">AnyPost微博发布失败，需要重新进行授权</string>
     <string name="publish_status_weibo_done">AnyPost微博发布成功</string>
     <string name="publish_status_wechat_fail">AnyPost朋友圈发布失败</string>
     <string name="publish_status_wechat_cancel">AnyPost朋友圈发布取消</string>
