@@ -148,6 +148,7 @@ public class MainActivity extends Activity implements
 
         mSharedBtn.setOnClickListener(this);
         mSharedBtn.setEnabled(false);
+        mSharedBtn.setBackgroundResource(R.drawable.ic_send_grey_24);
         mImageSelectBtn.setOnClickListener(this);
         //实现长按图片选择按钮，弹出照相界面功能
         mImageSelectBtn.setOnLongClickListener(new View.OnLongClickListener() {
@@ -246,17 +247,12 @@ public class MainActivity extends Activity implements
 
             @Override
             public void afterTextChanged(Editable s) {
-                if("".equals(editText.getText().toString().trim())) { //if(editText.getText().toString().trim().isEmpty())
+                if("".equals(editText.getText().toString().trim()))  //if(editText.getText().toString().trim().isEmpty())
                     text_exit = false;
-                    if (image_exit)
-                        mSharedBtn.setEnabled(true);
-                    else
-                        mSharedBtn.setEnabled(false);
-                }
-                else{
+                else
                     text_exit = true;
-                    mSharedBtn.setEnabled(true);
-                }
+                mSharedBtn.setEnabled((image_exit||text_exit)?true:false);
+                mSharedBtn.setBackgroundResource((image_exit || text_exit)? R.drawable.ic_send_green_24:R.drawable.ic_send_grey_24);
             }
         });
 
@@ -369,23 +365,22 @@ public class MainActivity extends Activity implements
                 // then in function addDeleteView RelativeLayout.LayoutParams can't be reconfigured,such as relative position
 
                 image_exit = true;
-                mSharedBtn.setEnabled(true);
+                mSharedBtn.setEnabled((image_exit||text_exit)?true:false);
+                mSharedBtn.setBackgroundResource((image_exit || text_exit) ? R.drawable.ic_send_green_24 : R.drawable.ic_send_grey_24);
             }else if(resultCode == RESULT_CANCELED){
                 if(mImageView == null){
                     image_exit = false;
-                    if(text_exit)
-                        mSharedBtn.setEnabled(true);
-                    else
-                        mSharedBtn.setEnabled(false);
+                    mSharedBtn.setEnabled((image_exit||text_exit)?true:false);
+                    mSharedBtn.setBackgroundResource((image_exit || text_exit)? R.drawable.ic_send_green_24:R.drawable.ic_send_grey_24);
                 }
             }
         }else if(requestCode == CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE){
             if (resultCode == RESULT_OK) {
-                String photoPath =  getRealPathFromURI(fileUri);
+                picturePath =  getRealPathFromURI(fileUri);
                 //设置图片尺寸，防止图片过大无法显示
                 BitmapFactory.Options options = new BitmapFactory.Options();
                 options.inJustDecodeBounds = true;
-                Bitmap Image = BitmapFactory.decodeFile(photoPath,options);
+                Bitmap Image = BitmapFactory.decodeFile(picturePath,options);
                 mSampleSize = 1;
                 mHeight = options.outHeight;
                 mWidth  = options.outWidth;
@@ -396,7 +391,7 @@ public class MainActivity extends Activity implements
                 options.inSampleSize = mSampleSize;
                 //后续可以根据layout设置固定尺寸
                 options.inJustDecodeBounds = false;
-                Image = BitmapFactory.decodeFile(photoPath,options);
+                Image = BitmapFactory.decodeFile(picturePath,options);
                 //设置图片展示layout，need to be modified
                 RelativeLayout imageShower = (RelativeLayout)findViewById(R.id.image_shower);
                 imageShower.removeAllViews();
@@ -408,24 +403,21 @@ public class MainActivity extends Activity implements
                 imageShower.addView(addDeleteView(view));
 
                 image_exit = true;
-                mSharedBtn.setEnabled(true);
+                mSharedBtn.setEnabled((image_exit||text_exit)?true:false);
+                mSharedBtn.setBackgroundResource((image_exit || text_exit) ? R.drawable.ic_send_green_24 : R.drawable.ic_send_grey_24);
             } else if (resultCode == RESULT_CANCELED) {
                 // User cancelled the image capture
                 if(mImageView == null){
                     image_exit = false;
-                    if(text_exit)
-                        mSharedBtn.setEnabled(true);
-                    else
-                        mSharedBtn.setEnabled(false);
+                    mSharedBtn.setEnabled((image_exit||text_exit)?true:false);
+                    mSharedBtn.setBackgroundResource((image_exit || text_exit)? R.drawable.ic_send_green_24:R.drawable.ic_send_grey_24);
                 }
             } else {
                 // Image capture failed, advise user
                 if(mImageView == null){
                     image_exit = false;
-                    if(text_exit)
-                        mSharedBtn.setEnabled(true);
-                    else
-                        mSharedBtn.setEnabled(false);
+                    mSharedBtn.setEnabled((image_exit||text_exit)?true:false);
+                    mSharedBtn.setBackgroundResource((image_exit || text_exit)? R.drawable.ic_send_green_24:R.drawable.ic_send_grey_24);
                 }
             }
 
@@ -510,14 +502,15 @@ public class MainActivity extends Activity implements
                 if (mWeiboBtn.isChecked() == true){
                     mStatusesAPI = new StatusesAPI(this, Constants.APP_KEY, mAccessToken);
                     mImageView = (ImageView) findViewById(R.id.image_selected);
-                    if(mImageView != null)
+                    if(mImageView != null) {
                         //发送图片微博
-                        if("".equals(editText.getText().toString().trim()))//when no text typed
-                            mStatusesAPI.upload(getString(R.string.share_picture_without_text), ((BitmapDrawable)mImageView.getDrawable()).getBitmap(), null, null, mListener);
+                        if ("".equals(editText.getText().toString().trim()))//when no text typed
+                            mStatusesAPI.upload(getString(R.string.share_picture_without_text), ((BitmapDrawable) mImageView.getDrawable()).getBitmap(), null, null, mListener);
                         else
-                            mStatusesAPI.upload(editText.getText().toString(), ((BitmapDrawable)mImageView.getDrawable()).getBitmap(), null, null, mListener);
+                            mStatusesAPI.upload(editText.getText().toString(), ((BitmapDrawable) mImageView.getDrawable()).getBitmap(), null, null, mListener);
                         // 如何发送原图到微博？ http://stackoverflow.com/questions/3879992/get-bitmap-from-an-uri-android
                         // mStatusesAPI.upload(editText.getText().toString(), getThumbnail(electedImage_Uri) , null, null, mListener);
+                    }
                     else
                         //发送文字微博
                         mStatusesAPI.update(editText.getText().toString(), null, null, mListener);
@@ -568,6 +561,7 @@ public class MainActivity extends Activity implements
                             cmb.setPrimaryClip(cd);
                             Toast.makeText(MainActivity.this, R.string.copy_to_clipboard, Toast.LENGTH_LONG).show();
                         }
+
                     } else {
                         //发送文字朋友圈
                         // 初始化一个WXTextObject对象
@@ -752,14 +746,14 @@ public class MainActivity extends Activity implements
             ErrorInfo info = ErrorInfo.parse(e.getMessage());
             NotificationCompat.Builder mBuilder;
             //if weibo access token expired, reauthorization needed.
-            if(info.toString() == ""){
-                Toast.makeText(MainActivity.this, "测试进来了没", Toast.LENGTH_LONG).show();
+            if(info.error_code.equals("21332".toString())){
                 //在通知栏显示AnyPost发布失败，提示需要进行重新授权并调起授权页面。
                 mBuilder = new NotificationCompat.Builder(MainActivity.this)
                         .setSmallIcon(R.drawable.ic_launcher)
                         .setContentTitle(getString(R.string.publish_status_weibo_fail_and_reauth))
                         .setContentText(getString(R.string.publish_status_weibo_fail_and_reauth));
-                //mSsoHandler.authorize(new AuthListener());
+                mBuilder.setTicker(getString(R.string.publish_status_weibo_fail_and_reauth));
+                mSsoHandler.authorize(new AuthListener());
             }else {
                 Toast.makeText(MainActivity.this, info.toString(), Toast.LENGTH_LONG).show();
                 //在通知栏显示AnyPost发布失败
@@ -767,8 +761,8 @@ public class MainActivity extends Activity implements
                         .setSmallIcon(R.drawable.ic_launcher)
                         .setContentTitle(getString(R.string.publish_status_weibo_fail))
                         .setContentText(getString(R.string.publish_status_weibo_fail));
+                mBuilder.setTicker(getString(R.string.publish_status_weibo_fail));
             }
-            mBuilder.setTicker(getString(R.string.publish_status_weibo_fail));
             NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
             mNotificationManager.cancel(MID_PRE);
             mNotificationManager.notify(null, MID_POST, mBuilder.build());
@@ -850,14 +844,14 @@ public class MainActivity extends Activity implements
         imageBtn.setId(R.id.btn_delete);
         imageBtn.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View v){
+            public void onClick(View v) {
                 RelativeLayout imageShower = (RelativeLayout) findViewById(R.id.image_shower);
                 imageShower.removeAllViews();
+//                imageShower = null;
                 image_exit = false;
-                if(text_exit)
-                    mSharedBtn.setEnabled(true);
-                else
-                    mSharedBtn.setEnabled(false);
+                mSharedBtn.setEnabled((image_exit || text_exit) ? true : false);
+                mSharedBtn.setBackgroundResource((image_exit || text_exit)? R.drawable.ic_send_green_24:R.drawable.ic_send_grey_24);
+                picturePath = null;//reset picturePath
             }
         });
         return imageBtn;
