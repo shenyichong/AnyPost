@@ -18,14 +18,17 @@
         android:maxLines="8"
         android:hint="@string/text_hint"
         android:focusableInTouchMode="true"
-        android:layout_toLeftOf="@+id/share_button"
-        android:layout_toStartOf="@+id/share_button" />
+        android:layout_toLeftOf="@+id/image_select_button"
+        android:layout_toStartOf="@+id/image_select_button" />
 
     <ImageButton
         android:layout_width="45dp"
-        android:layout_height="30dp"
+        android:layout_height="35dp"
         android:background="@drawable/rich_text_img_holder"
         android:text="@string/image_select"
+        android:elegantTextHeight="false"
+        android:layout_marginBottom="100dp"
+        android:layout_alignParentBottom="true"
         android:id="@+id/image_select_button"
         android:layout_alignBottom="@+id/editText"
         android:layout_alignRight="@+id/share_button"
@@ -39,12 +42,28 @@
         android:id="@+id/share_button"
         android:textSize="@dimen/abc_action_bar_content_inset_material"
         android:clickable="true"
-        android:elegantTextHeight="false"
-        android:layout_marginBottom="99dp"
-        android:layout_alignParentBottom="true"
-        android:layout_alignRight="@+id/horizontalScrollView"
-        android:layout_alignEnd="@+id/horizontalScrollView"
+        android:layout_alignParentRight="true"
         android:layout_alignParentEnd="true" />
+
+    <HorizontalScrollView
+        android:layout_width="match_parent"
+        android:layout_height="100dp"
+        android:id="@+id/horizontalScrollView"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentRight="true"
+        android:fillViewport="false"
+        android:layout_marginBottom="10dp"
+        android:layout_above="@+id/image_select_button"
+        android:layout_below="@+id/editText">
+
+        <RelativeLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:adjustViewBounds="true"
+            android:id="@+id/image_shower" />
+
+
+    </HorizontalScrollView>
 
     <ToggleButton
         android:layout_width="35dp"
@@ -54,30 +73,11 @@
         android:background="@drawable/btn_share_weibo"
         android:textOff=""
         android:textOn=""
-        android:layout_alignTop="@+id/share_button"
+        android:layout_alignTop="@+id/image_select_button"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
         android:layout_marginStart="10dp"
         android:layout_marginLeft="10dp"/>
-
-    <HorizontalScrollView
-        android:layout_width="match_parent"
-        android:layout_height="100dp"
-        android:id="@+id/horizontalScrollView"
-        android:layout_below="@+id/image_select_button"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"
-        android:layout_above="@+id/share_button" >
-
-        <RelativeLayout
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:adjustViewBounds="true"
-            android:id="@+id/image_shower" />
-
-
-    </HorizontalScrollView>
-
     <ToggleButton
         android:textOn=""
         android:textOff=""
@@ -100,7 +100,7 @@
         android:layout_height="35dp"
         android:id="@+id/toggleButton_tencent"
         android:checked="false"
-        android:layout_below="@+id/horizontalScrollView"
+        android:layout_alignTop="@+id/toggleButton_weibo"
         android:layout_toRightOf="@+id/toggleButton_wechat"
         android:layout_toEndOf="@+id/toggleButton_wechat"
         android:layout_marginLeft="60dp"
