@@ -5,6 +5,7 @@ import android.content.res.TypedArray;
 import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
 import android.view.Gravity;
+import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.RelativeLayout;
@@ -31,6 +32,17 @@ public class Topbar extends RelativeLayout{
     private int titleTextColor;
 
     private RelativeLayout.LayoutParams leftParams, rightParams,titleParams;
+
+    private topbarClickListener listener;
+
+    public interface topbarClickListener{
+        public void leftClick();
+        public void rightClick();
+    }
+
+    public void setOnTopbarClickListener(topbarClickListener listener){
+        this.listener = listener;
+    }
 
     public Topbar(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -66,6 +78,7 @@ public class Topbar extends RelativeLayout{
         tvTitle.setGravity(Gravity.CENTER);
 
         setBackgroundColor(0xFF3659A0);
+        //setBackgroundResource(R.drawable.menu_dialog_button_red_pressed);
 
         leftParams = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
         leftParams.addRule(RelativeLayout.ALIGN_PARENT_LEFT, TRUE);
@@ -76,7 +89,35 @@ public class Topbar extends RelativeLayout{
         addView(rightButton, rightParams);
 
         titleParams = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.MATCH_PARENT);
-        titleParams.addRule(RelativeLayout.CENTER_IN_PARENT,TRUE);
-        addView(tvTitle,titleParams);
+        titleParams.addRule(RelativeLayout.CENTER_IN_PARENT, TRUE);
+        addView(tvTitle, titleParams);
+
+        rightButton.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                listener.rightClick();
+            }
+        });
+
+        leftButton.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                listener.leftClick();
+            }
+        });
+    }
+
+    public void setLeftButtonVisible(boolean flag){
+        if(flag)
+            leftButton.setVisibility(View.VISIBLE);
+        else
+            leftButton.setVisibility(View.GONE);
+    }
+
+    public void setRightButtonVisible(boolean flag){
+        if(flag)
+            rightButton.setVisibility(View.VISIBLE);
+        else
+            rightButton.setVisibility(View.GONE);
     }
 }

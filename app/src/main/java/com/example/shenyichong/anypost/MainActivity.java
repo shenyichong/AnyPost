@@ -64,7 +64,6 @@ import com.tencent.tauth.UiError;
 import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import android.app.ActionBar;
 
 
 //public class MainActivity extends Activity implements View.OnClickListener, IWeiboHandler.Response {
@@ -118,6 +117,9 @@ public class MainActivity extends Activity implements
     //qqzone选择分享按钮
     private ToggleButton     mQqzoneBtn;
 
+    //topbar
+    private Topbar  mTopbar;
+
 
 
     //used to detect Gestures
@@ -141,10 +143,12 @@ public class MainActivity extends Activity implements
 
         //注册按钮，使得按钮被点击时，调用onClick函数
         mSharedBtn = (ImageButton) findViewById(R.id.share_button);
+        editText = (EditText) findViewById(R.id.editText);
         mImageSelectBtn = (ImageButton)findViewById(R.id.image_select_button);
         mWechatBtn=(ToggleButton)findViewById(R.id.toggleButton_wechat);
         mWeiboBtn=(ToggleButton)findViewById(R.id.toggleButton_weibo);
         mQqzoneBtn=(ToggleButton)findViewById(R.id.toggleButton_tencent);
+        mTopbar=(Topbar)findViewById(R.id.topbar);
         mImageView=null;
 
         mSharedBtn.setOnClickListener(this);
@@ -188,7 +192,19 @@ public class MainActivity extends Activity implements
             }
         });
 
-        editText = (EditText) findViewById(R.id.editText);
+        mTopbar.setOnTopbarClickListener(new Topbar.topbarClickListener() {
+            @Override
+            public void leftClick() {
+                Toast.makeText(MainActivity.this,"left button",Toast.LENGTH_SHORT).show();
+            }
+            @Override
+            public void rightClick() {
+                Toast.makeText(MainActivity.this,"right button",Toast.LENGTH_SHORT).show();
+            }
+        });
+        mTopbar.setLeftButtonVisible(true);
+        mTopbar.setRightButtonVisible(true);
+
 
         // 创建微博分享接口实例
         mWeiboShareAPI = WeiboShareSDK.createWeiboAPI(this, Constants.APP_KEY);

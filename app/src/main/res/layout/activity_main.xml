@@ -16,7 +16,7 @@
         custom:rightBackground="#8A93DB"
         custom:rightText="back"
         custom:rightTextColor="#F43542"
-        custom:tiTle="title"
+        custom:tiTle="AnyPost"
         custom:tiTleTextColor="#F43542"
         custom:tiTleTextSize="10sp"
         android:layout_alignParentLeft="true"
