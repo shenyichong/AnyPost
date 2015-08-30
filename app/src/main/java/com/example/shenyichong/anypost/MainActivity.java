@@ -64,6 +64,7 @@ import com.tencent.tauth.UiError;
 import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import android.app.ActionBar;
 
 
 //public class MainActivity extends Activity implements View.OnClickListener, IWeiboHandler.Response {
@@ -129,7 +130,7 @@ public class MainActivity extends Activity implements
     String picturePath;
 
     ImageLoaderConfiguration mUILconfig;
-
+    ImageLoader imageloader;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -262,8 +263,8 @@ public class MainActivity extends Activity implements
 
         //code from Open Scource Project Android_Universal_Image_Loader
         mUILconfig = new ImageLoaderConfiguration.Builder(this).build();
-        ImageLoader.getInstance().init(mUILconfig);
-
+        imageloader = ImageLoader.getInstance();
+        imageloader.init(mUILconfig);
 
     }
     @Override
@@ -291,7 +292,6 @@ public class MainActivity extends Activity implements
             return true;
         }
     }
-
 
 
     @Override

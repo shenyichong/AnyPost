@@ -1,110 +1,140 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:custom="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:id="@+id/MainFrame"
     android:layout_height="match_parent"
-    android:paddingLeft="@dimen/activity_horizontal_margin"
-    android:paddingRight="@dimen/activity_horizontal_margin"
-    android:paddingTop="@dimen/activity_vertical_margin"
-    android:paddingBottom="@dimen/activity_vertical_margin" tools:context=".MainActivity">
+    tools:context=".MainActivity">
 
-    <EditText
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/editText"
-        android:layout_alignParentTop="true"
+    <com.example.shenyichong.anypost.Topbar
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:id="@+id/topbar"
+        custom:leftBackground="#8A93DB"
+        custom:leftText="menu"
+        custom:leftTextColor="#F43542"
+        custom:rightBackground="#8A93DB"
+        custom:rightText="back"
+        custom:rightTextColor="#F43542"
+        custom:tiTle="title"
+        custom:tiTleTextColor="#F43542"
+        custom:tiTleTextSize="10sp"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
-        android:maxLines="8"
-        android:hint="@string/text_hint"
-        android:focusableInTouchMode="true"
-        android:layout_toLeftOf="@+id/image_select_button"
-        android:layout_toStartOf="@+id/image_select_button" />
-
-    <ImageButton
-        android:layout_width="45dp"
-        android:layout_height="35dp"
-        android:background="@drawable/rich_text_img_holder"
-        android:text="@string/image_select"
-        android:elegantTextHeight="false"
-        android:layout_marginBottom="100dp"
-        android:layout_alignParentBottom="true"
-        android:id="@+id/image_select_button"
-        android:layout_alignBottom="@+id/editText"
-        android:layout_alignRight="@+id/share_button"
-        android:layout_alignEnd="@+id/share_button" />
-
-    <ImageButton
-        android:layout_width="40dp"
-        android:layout_height="35dp"
-        android:background="@drawable/ic_send_green_24"
-        android:text="@string/button_publish"
-        android:id="@+id/share_button"
-        android:textSize="@dimen/abc_action_bar_content_inset_material"
-        android:clickable="true"
         android:layout_alignParentRight="true"
-        android:layout_alignParentEnd="true" />
+        android:layout_alignParentTop="true" />
 
-    <HorizontalScrollView
+    <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="100dp"
-        android:id="@+id/horizontalScrollView"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentRight="true"
-        android:fillViewport="false"
-        android:layout_marginBottom="10dp"
-        android:layout_above="@+id/image_select_button"
-        android:layout_below="@+id/editText">
-
-        <RelativeLayout
+        android:layout_height="match_parent"
+        android:id="@+id/MainContent"
+        android:paddingLeft="@dimen/activity_horizontal_margin"
+        android:paddingRight="@dimen/activity_horizontal_margin"
+        android:paddingTop="@dimen/activity_vertical_margin"
+        android:paddingBottom="@dimen/activity_vertical_margin">
+        <EditText
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:adjustViewBounds="true"
-            android:id="@+id/image_shower" />
+            android:id="@+id/editText"
+            android:layout_alignParentTop="true"
+            android:layout_marginTop="40dp"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true"
+            android:maxLines="8"
+            android:hint="@string/text_hint"
+            android:focusableInTouchMode="true"
+            android:layout_toLeftOf="@+id/image_select_button"
+            android:layout_toStartOf="@+id/image_select_button" />
+
+        <ImageButton
+            android:layout_width="45dp"
+            android:layout_height="35dp"
+            android:background="@drawable/rich_text_img_holder"
+            android:text="@string/image_select"
+            android:elegantTextHeight="false"
+            android:layout_marginBottom="100dp"
+            android:layout_alignParentBottom="true"
+            android:id="@+id/image_select_button"
+            android:layout_alignBottom="@+id/editText"
+            android:layout_alignRight="@+id/share_button"
+            android:layout_alignEnd="@+id/share_button" />
+
+        <ImageButton
+            android:layout_width="40dp"
+            android:layout_height="35dp"
+            android:background="@drawable/ic_send_green_24"
+            android:text="@string/button_publish"
+            android:id="@+id/share_button"
+            android:textSize="@dimen/abc_action_bar_content_inset_material"
+            android:clickable="true"
+            android:layout_alignParentTop="true"
+            android:layout_marginTop="40dp"
+            android:layout_alignParentRight="true"
+            android:layout_alignParentEnd="true" />
+
+        <HorizontalScrollView
+            android:layout_width="match_parent"
+            android:layout_height="100dp"
+            android:id="@+id/horizontalScrollView"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentRight="true"
+            android:fillViewport="false"
+            android:layout_marginBottom="10dp"
+            android:layout_above="@+id/image_select_button"
+            android:layout_below="@+id/editText">
+
+            <RelativeLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:adjustViewBounds="true"
+                android:id="@+id/image_shower" />
 
 
-    </HorizontalScrollView>
+        </HorizontalScrollView>
 
-    <ToggleButton
-        android:layout_width="35dp"
-        android:layout_height="35dp"
-        android:id="@+id/toggleButton_weibo"
-        android:contentDescription="@string/abc_action_bar_home_description"
-        android:background="@drawable/btn_share_weibo"
-        android:textOff=""
-        android:textOn=""
-        android:layout_alignTop="@+id/image_select_button"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"
-        android:layout_marginStart="10dp"
-        android:layout_marginLeft="10dp"/>
-    <ToggleButton
-        android:textOn=""
-        android:textOff=""
-        android:background="@drawable/btn_share_weixin_quan"
-        android:layout_width="35dp"
-        android:layout_height="35dp"
-        android:id="@+id/toggleButton_wechat"
-        android:checked="false"
-        android:layout_alignTop="@+id/toggleButton_weibo"
-        android:layout_toRightOf="@+id/toggleButton_weibo"
-        android:layout_toEndOf="@+id/toggleButton_weibo"
-        android:layout_marginLeft="60dp"
-        android:layout_marginStart="60dp" />
+        <ToggleButton
+            android:layout_width="35dp"
+            android:layout_height="35dp"
+            android:id="@+id/toggleButton_weibo"
+            android:contentDescription="@string/abc_action_bar_home_description"
+            android:background="@drawable/btn_share_weibo"
+            android:textOff=""
+            android:textOn=""
+            android:layout_alignTop="@+id/image_select_button"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true"
+            android:layout_marginStart="10dp"
+            android:layout_marginLeft="10dp"/>
+        <ToggleButton
+            android:textOn=""
+            android:textOff=""
+            android:background="@drawable/btn_share_weixin_quan"
+            android:layout_width="35dp"
+            android:layout_height="35dp"
+            android:id="@+id/toggleButton_wechat"
+            android:checked="false"
+            android:layout_alignTop="@+id/toggleButton_weibo"
+            android:layout_toRightOf="@+id/toggleButton_weibo"
+            android:layout_toEndOf="@+id/toggleButton_weibo"
+            android:layout_marginLeft="60dp"
+            android:layout_marginStart="60dp" />
 
-    <ToggleButton
-        android:textOn=""
-        android:textOff=""
-        android:background="@drawable/btn_share_qzone"
-        android:layout_width="35dp"
-        android:layout_height="35dp"
-        android:id="@+id/toggleButton_tencent"
-        android:checked="false"
-        android:layout_alignTop="@+id/toggleButton_weibo"
-        android:layout_toRightOf="@+id/toggleButton_wechat"
-        android:layout_toEndOf="@+id/toggleButton_wechat"
-        android:layout_marginLeft="60dp"
-        android:layout_marginStart="60dp" />
+        <ToggleButton
+            android:textOn=""
+            android:textOff=""
+            android:background="@drawable/btn_share_qzone"
+            android:layout_width="35dp"
+            android:layout_height="35dp"
+            android:id="@+id/toggleButton_tencent"
+            android:checked="false"
+            android:layout_alignTop="@+id/toggleButton_weibo"
+            android:layout_toRightOf="@+id/toggleButton_wechat"
+            android:layout_toEndOf="@+id/toggleButton_wechat"
+            android:layout_marginLeft="60dp"
+            android:layout_marginStart="60dp" />
+
+    </RelativeLayout>
+
 
 </RelativeLayout>
 
