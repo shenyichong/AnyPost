@@ -195,14 +195,16 @@ public class MainActivity extends Activity implements
         mTopbar.setOnTopbarClickListener(new Topbar.topbarClickListener() {
             @Override
             public void leftClick() {
-                Toast.makeText(MainActivity.this,"left button",Toast.LENGTH_SHORT).show();
+                Toast.makeText(MainActivity.this, "left button", Toast.LENGTH_SHORT).show();
             }
+
             @Override
             public void rightClick() {
-                Toast.makeText(MainActivity.this,"right button",Toast.LENGTH_SHORT).show();
+                Intent intent = new Intent(MainActivity.this,infoActivity.class);
+                startActivity(intent);
             }
         });
-        mTopbar.setLeftButtonVisible(true);
+        mTopbar.setLeftButtonVisible(false);
         mTopbar.setRightButtonVisible(true);
 
 

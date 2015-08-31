@@ -19,12 +19,12 @@ public class Topbar extends RelativeLayout{
     private Button leftButton,rightButton;
     private TextView tvTitle;
 
-    private String leftText;
-    private int leftTextColor;
+//    private String leftText;
+//    private int leftTextColor;
     private Drawable leftBackground;
 
-    private String rightText;
-    private int rightTextColor;
+//    private String rightText;
+//    private int rightTextColor;
     private Drawable rightBackground;
 
     private String title;
@@ -48,12 +48,12 @@ public class Topbar extends RelativeLayout{
         super(context, attrs);
         TypedArray ta = context.obtainStyledAttributes(attrs,R.styleable.Topbar);
 
-        leftText = ta.getString(R.styleable.Topbar_leftText);
-        leftTextColor = ta.getColor(R.styleable.Topbar_leftTextColor, 0);
+        //leftText = ta.getString(R.styleable.Topbar_leftText);
+        //leftTextColor = ta.getColor(R.styleable.Topbar_leftTextColor, 0);
         leftBackground = ta.getDrawable(R.styleable.Topbar_leftBackground);
 
-        rightText = ta.getString(R.styleable.Topbar_rightText);
-        rightTextColor = ta.getColor(R.styleable.Topbar_rightTextColor, 0);
+        //rightText = ta.getString(R.styleable.Topbar_rightText);
+        //rightTextColor = ta.getColor(R.styleable.Topbar_rightTextColor, 0);
         rightBackground = ta.getDrawable(R.styleable.Topbar_rightBackground);
 
         title = ta.getString(R.styleable.Topbar_tiTle);
@@ -66,12 +66,12 @@ public class Topbar extends RelativeLayout{
         rightButton = new Button(context);
         tvTitle = new TextView(context);
 
-        leftButton.setTextColor(leftTextColor);
+        //leftButton.setTextColor(leftTextColor);
         leftButton.setBackground(leftBackground);
-        leftButton.setText(leftText);
-        rightButton.setTextColor(rightTextColor);
+        //leftButton.setText(leftText);
+        //rightButton.setTextColor(rightTextColor);
         rightButton.setBackground(rightBackground);
-        rightButton.setText(rightText);
+        //rightButton.setText(rightText);
         tvTitle.setText(title);
         tvTitle.setTextColor(titleTextColor);
         tvTitle.setTextSize(titleTextSize);
@@ -80,12 +80,16 @@ public class Topbar extends RelativeLayout{
         setBackgroundColor(0xFF3659A0);
         //setBackgroundResource(R.drawable.menu_dialog_button_red_pressed);
 
-        leftParams = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        leftParams = new RelativeLayout.LayoutParams(180, 120);
         leftParams.addRule(RelativeLayout.ALIGN_PARENT_LEFT, TRUE);
+        leftParams.leftMargin=30;
+        leftParams.topMargin=25;
         addView(leftButton, leftParams);
 
-        rightParams = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        rightParams = new RelativeLayout.LayoutParams(180, 120);
         rightParams.addRule(RelativeLayout.ALIGN_PARENT_RIGHT, TRUE);
+        rightParams.rightMargin=30;
+        rightParams.topMargin=25;
         addView(rightButton, rightParams);
 
         titleParams = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.MATCH_PARENT);
