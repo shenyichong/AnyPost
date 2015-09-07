@@ -6,7 +6,7 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
-    <com.example.shenyichong.anypost.Topbar
+    <com.alexshwn.shenyichong.anypost.Topbar
         android:layout_width="match_parent"
         android:layout_height="60dp"
         android:id="@+id/topbar"

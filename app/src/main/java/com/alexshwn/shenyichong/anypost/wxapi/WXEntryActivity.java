@@ -1,4 +1,4 @@
-package com.example.shenyichong.anypost.wxapi;
+package com.alexshwn.shenyichong.anypost.wxapi;
 
 import android.app.Activity;
 import android.app.NotificationManager;
@@ -7,8 +7,8 @@ import android.os.Bundle;
 import android.support.v4.app.NotificationCompat;
 import android.widget.Toast;
 
-import com.example.shenyichong.anypost.Constants;
-import com.example.shenyichong.anypost.R;
+import com.alexshwn.shenyichong.anypost.Constants;
+import com.alexshwn.shenyichong.anypost.R;
 import com.tencent.mm.sdk.constants.ConstantsAPI;
 import com.tencent.mm.sdk.modelbase.BaseReq;
 import com.tencent.mm.sdk.modelbase.BaseResp;

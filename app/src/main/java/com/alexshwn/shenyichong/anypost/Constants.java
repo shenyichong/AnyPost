@@ -1,4 +1,4 @@
-package com.example.shenyichong.anypost;
+package com.alexshwn.shenyichong.anypost;
 
 /**
  * Created by shenyichong on 2015/5/29.

@@ -1,4 +1,4 @@
-package com.example.shenyichong.anypost;
+package com.alexshwn.shenyichong.anypost;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;

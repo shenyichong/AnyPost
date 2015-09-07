@@ -1,4 +1,4 @@
-package com.example.shenyichong.anypost;
+package com.alexshwn.shenyichong.anypost;
 
 import android.app.Application;
 import android.test.ApplicationTestCase;

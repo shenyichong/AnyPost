@@ -4,9 +4,9 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:id="@+id/infoMain"
-    tools:context="com.example.shenyichong.anypost.infoActivity">
+    tools:context="com.alexshwn.shenyichong.anypost.infoActivity">
 
-    <com.example.shenyichong.anypost.Topbar
+    <com.alexshwn.shenyichong.anypost.Topbar
         android:layout_width="match_parent"
         android:layout_height="60dp"
         android:id="@+id/topbar"
