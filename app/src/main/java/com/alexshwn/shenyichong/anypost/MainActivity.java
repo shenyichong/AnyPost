@@ -284,6 +284,25 @@ public class MainActivity extends Activity implements
         imageloader = ImageLoader.getInstance();
         imageloader.init(mUILconfig);
 
+        //content provider
+        //String[] filePathColumn = {MediaStore.Images.Media.DATA};
+        String[] filePathColumn = {MediaStore.Images.Media.DATA,MediaStore.MediaColumns.DATE_ADDED};
+        Cursor cursor = getContentResolver().query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, filePathColumn, null, null, null);
+        cursor.moveToLast();
+        int columnIndex0 = cursor.getColumnIndex(filePathColumn[0]);
+        int columnIndex1 = cursor.getColumnIndex(filePathColumn[1]);
+        String latest_pic_path = cursor.getString(columnIndex0);
+        String str_seconds_before_1970 = cursor.getString(columnIndex1);
+        int int_seconds_before_1970 = Integer.parseInt(str_seconds_before_1970);
+        long time=System.currentTimeMillis()/1000;
+        if((time-int_seconds_before_1970)/3600 <= 1){
+            Toast.makeText(MainActivity.this, "there's image captured within one hour", Toast.LENGTH_SHORT).show();
+        }else{
+            Toast.makeText(MainActivity.this, "no images captured within one hour", Toast.LENGTH_SHORT).show();
+        }
+
+
+
     }
     @Override
     public boolean onTouchEvent(MotionEvent event){
