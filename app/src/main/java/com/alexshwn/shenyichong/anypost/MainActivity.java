@@ -11,6 +11,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
 import android.graphics.drawable.BitmapDrawable;
+import android.media.ThumbnailUtils;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
@@ -297,6 +298,12 @@ public class MainActivity extends Activity implements
         long time=System.currentTimeMillis()/1000;
         if((time-int_seconds_before_1970)/3600 <= 1){
             Toast.makeText(MainActivity.this, "there's image captured within one hour", Toast.LENGTH_SHORT).show();
+            Bitmap Image = BitmapFactory.decodeFile(latest_pic_path);
+            Bitmap Thumb_image = ThumbnailUtils.extractThumbnail(Image, 200, 200);
+            //need add UI component to show thumbnails 
+            RelativeLayout imageShower = (RelativeLayout) findViewById(R.id.image_shower);
+            ImageView view = addImageView(Thumb_image);
+            imageShower.addView(view);
         }else{
             Toast.makeText(MainActivity.this, "no images captured within one hour", Toast.LENGTH_SHORT).show();
         }
