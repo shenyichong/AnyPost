@@ -292,18 +292,41 @@ public class MainActivity extends Activity implements
         cursor.moveToLast();
         int columnIndex0 = cursor.getColumnIndex(filePathColumn[0]);
         int columnIndex1 = cursor.getColumnIndex(filePathColumn[1]);
-        String latest_pic_path = cursor.getString(columnIndex0);
+        final String latest_pic_path = cursor.getString(columnIndex0);
         String str_seconds_before_1970 = cursor.getString(columnIndex1);
         int int_seconds_before_1970 = Integer.parseInt(str_seconds_before_1970);
         long time=System.currentTimeMillis()/1000;
         if((time-int_seconds_before_1970)/3600 <= 1){
             Toast.makeText(MainActivity.this, "there's image captured within one hour", Toast.LENGTH_SHORT).show();
             Bitmap Image = BitmapFactory.decodeFile(latest_pic_path);
-            Bitmap Thumb_image = ThumbnailUtils.extractThumbnail(Image, 200, 200);
-            //need add UI component to show thumbnails 
-            RelativeLayout imageShower = (RelativeLayout) findViewById(R.id.image_shower);
-            ImageView view = addImageView(Thumb_image);
-            imageShower.addView(view);
+            Bitmap thumb_image = ThumbnailUtils.extractThumbnail(Image, 200, 200);
+
+            //add UI component to show thumbnails
+            //implement thumbnail imageview itself
+            ImageView thumbnail_view = new ImageView(this);
+            thumbnail_view.setImageBitmap(thumb_image);
+            RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.WRAP_CONTENT, RelativeLayout.LayoutParams.WRAP_CONTENT);
+            thumbnail_view.setLayoutParams(lp);
+
+            //implement RelativeLayout of thumbnail container
+            final RelativeLayout thumbnail_container = new RelativeLayout(this);
+            RelativeLayout.LayoutParams lp1 = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.WRAP_CONTENT, RelativeLayout.LayoutParams.WRAP_CONTENT);
+            lp1.addRule(RelativeLayout.ABOVE,R.id.image_select_button);
+            lp1.addRule(RelativeLayout.ALIGN_RIGHT,R.id.image_select_button);
+            thumbnail_container.setOnClickListener(new View.OnClickListener(){
+                @Override
+                public void onClick(View v) {
+                    picturePath = latest_pic_path;
+                    addImage();
+                    thumbnail_container.removeAllViews();
+                }
+            });
+            thumbnail_container.addView(thumbnail_view);
+
+            //add thumbnail container into RelativeLayout main_content
+            RelativeLayout main_content = (RelativeLayout) findViewById(R.id.MainContent);
+            main_content.addView(thumbnail_container,lp1);
+
         }else{
             Toast.makeText(MainActivity.this, "no images captured within one hour", Toast.LENGTH_SHORT).show();
         }
@@ -383,34 +406,7 @@ public class MainActivity extends Activity implements
                 int columnIndex = cursor.getColumnIndex(filePathColumn[0]);
                 picturePath = cursor.getString(columnIndex);
                 cursor.close();
-                //设置图片尺寸，防止图片过大无法显示
-                BitmapFactory.Options options = new BitmapFactory.Options();
-                options.inJustDecodeBounds = true;
-                Bitmap Image = BitmapFactory.decodeFile(picturePath, options);
-                mSampleSize = 1;
-                mHeight = options.outHeight;
-                mWidth = options.outWidth;
-                while (mHeight > 4096 || mWidth > 4096) {
-                    mHeight /= 2;
-                    mWidth /= 2;
-                    mSampleSize *= 2;
-                }
-                options.inSampleSize = mSampleSize;
-                //后续可以根据layout设置固定尺寸
-                options.inJustDecodeBounds = false;
-                Image = BitmapFactory.decodeFile(picturePath, options);
-                //设置图片展示layout,need to be modified
-                RelativeLayout imageShower = (RelativeLayout) findViewById(R.id.image_shower);
-                imageShower.removeAllViews();
-                ImageView view = addImageView(Image);
-                imageShower.addView(view);
-                imageShower.addView(addDeleteView(view));
-                // if set height and width here:imageShower.addView(addDeleteView(view),60,60);
-                // then in function addDeleteView RelativeLayout.LayoutParams can't be reconfigured,such as relative position
-
-                image_exit = true;
-                mSharedBtn.setEnabled((image_exit||text_exit)?true:false);
-                mSharedBtn.setBackgroundResource((image_exit || text_exit) ? R.drawable.ic_send_green_24 : R.drawable.ic_send_grey_24);
+                addImage();
             }else if(resultCode == RESULT_CANCELED){
                 if(mImageView == null){
                     image_exit = false;
@@ -421,34 +417,7 @@ public class MainActivity extends Activity implements
         }else if(requestCode == CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE){
             if (resultCode == RESULT_OK) {
                 picturePath =  getRealPathFromURI(fileUri);
-                //设置图片尺寸，防止图片过大无法显示
-                BitmapFactory.Options options = new BitmapFactory.Options();
-                options.inJustDecodeBounds = true;
-                Bitmap Image = BitmapFactory.decodeFile(picturePath,options);
-                mSampleSize = 1;
-                mHeight = options.outHeight;
-                mWidth  = options.outWidth;
-                while(mHeight > 4096 || mWidth > 4096){
-                    mHeight /= 2; mWidth /= 2;
-                    mSampleSize *= 2;
-                }
-                options.inSampleSize = mSampleSize;
-                //后续可以根据layout设置固定尺寸
-                options.inJustDecodeBounds = false;
-                Image = BitmapFactory.decodeFile(picturePath,options);
-                //设置图片展示layout，need to be modified
-                RelativeLayout imageShower = (RelativeLayout)findViewById(R.id.image_shower);
-                imageShower.removeAllViews();
-//                ImageView view = addImageView(Image);
-//                imageShower.addView(view,mWidth/mSampleSize,mHeight/mSampleSize);
-//                imageShower.addView(addDeleteView(view), 50, 50);
-                ImageView view = addImageView(Image);
-                imageShower.addView(view);
-                imageShower.addView(addDeleteView(view));
-
-                image_exit = true;
-                mSharedBtn.setEnabled((image_exit||text_exit)?true:false);
-                mSharedBtn.setBackgroundResource((image_exit || text_exit) ? R.drawable.ic_send_green_24 : R.drawable.ic_send_grey_24);
+                addImage();
             } else if (resultCode == RESULT_CANCELED) {
                 // User cancelled the image capture
                 if(mImageView == null){
@@ -899,5 +868,36 @@ public class MainActivity extends Activity implements
             }
         });
         return imageBtn;
+    }
+
+    private void addImage(){
+        //设置图片尺寸，防止图片过大无法显示
+        BitmapFactory.Options options = new BitmapFactory.Options();
+        options.inJustDecodeBounds = true;
+        Bitmap Image = BitmapFactory.decodeFile(picturePath, options);
+        mSampleSize = 1;
+        mHeight = options.outHeight;
+        mWidth = options.outWidth;
+        while (mHeight > 4096 || mWidth > 4096) {
+            mHeight /= 2;
+            mWidth /= 2;
+            mSampleSize *= 2;
+        }
+        options.inSampleSize = mSampleSize;
+        //后续可以根据layout设置固定尺寸
+        options.inJustDecodeBounds = false;
+        Image = BitmapFactory.decodeFile(picturePath, options);
+        //设置图片展示layout,need to be modified
+        RelativeLayout imageShower = (RelativeLayout) findViewById(R.id.image_shower);
+        imageShower.removeAllViews();
+        ImageView view = addImageView(Image);
+        imageShower.addView(view);
+        imageShower.addView(addDeleteView(view));
+        // if set height and width here:imageShower.addView(addDeleteView(view),60,60);
+        // then in function addDeleteView RelativeLayout.LayoutParams can't be reconfigured,such as relative position
+
+        image_exit = true;
+        mSharedBtn.setEnabled((image_exit||text_exit)?true:false);
+        mSharedBtn.setBackgroundResource((image_exit || text_exit) ? R.drawable.ic_send_green_24 : R.drawable.ic_send_grey_24);
     }
 }
