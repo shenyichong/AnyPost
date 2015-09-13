@@ -15,6 +15,7 @@ import android.media.ThumbnailUtils;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Handler;
 import android.provider.MediaStore;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.view.GestureDetectorCompat;
@@ -131,6 +132,8 @@ public class MainActivity extends Activity implements
     private Uri  fileUri;
     //Path to show image location
     String picturePath;
+    //container to show thumbnail
+    RelativeLayout thumbnail_container;
 
     ImageLoaderConfiguration mUILconfig;
     ImageLoader imageloader;
@@ -297,7 +300,7 @@ public class MainActivity extends Activity implements
         int int_seconds_before_1970 = Integer.parseInt(str_seconds_before_1970);
         long time=System.currentTimeMillis()/1000;
         if((time-int_seconds_before_1970)/3600 <= 1){
-            Toast.makeText(MainActivity.this, "there's image captured within one hour", Toast.LENGTH_SHORT).show();
+            //Toast.makeText(MainActivity.this, "there's image captured within one hour", Toast.LENGTH_SHORT).show();
             Bitmap Image = BitmapFactory.decodeFile(latest_pic_path);
             Bitmap thumb_image = ThumbnailUtils.extractThumbnail(Image, 200, 200);
 
@@ -309,11 +312,12 @@ public class MainActivity extends Activity implements
             thumbnail_view.setLayoutParams(lp);
 
             //implement RelativeLayout of thumbnail container
-            final RelativeLayout thumbnail_container = new RelativeLayout(this);
+            thumbnail_container = new RelativeLayout(this);
             RelativeLayout.LayoutParams lp1 = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.WRAP_CONTENT, RelativeLayout.LayoutParams.WRAP_CONTENT);
             lp1.addRule(RelativeLayout.ABOVE,R.id.image_select_button);
             lp1.addRule(RelativeLayout.ALIGN_RIGHT,R.id.image_select_button);
-            thumbnail_container.setOnClickListener(new View.OnClickListener(){
+            lp1.bottomMargin = 40;
+            thumbnail_container.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     picturePath = latest_pic_path;
@@ -325,10 +329,20 @@ public class MainActivity extends Activity implements
 
             //add thumbnail container into RelativeLayout main_content
             RelativeLayout main_content = (RelativeLayout) findViewById(R.id.MainContent);
-            main_content.addView(thumbnail_container,lp1);
+            main_content.addView(thumbnail_container, lp1);
+
+            //显示4s后自动关闭
+            new Handler().postDelayed(new Runnable() {
+                public void run() {
+                    //delayed method
+                    //安卓中的消息处理方式实现延时
+                    thumbnail_container.removeAllViews();
+                    thumbnail_container=null;
+                }
+            }, 4000);
 
         }else{
-            Toast.makeText(MainActivity.this, "no images captured within one hour", Toast.LENGTH_SHORT).show();
+            //Toast.makeText(MainActivity.this, "no images captured within one hour", Toast.LENGTH_SHORT).show();
         }
 
 
