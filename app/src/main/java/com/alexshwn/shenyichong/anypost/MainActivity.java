@@ -6,6 +6,7 @@ import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -77,6 +78,8 @@ public class MainActivity extends Activity implements
     public static final int SHARE_CLIENT = 1;
 //    public static final int SHARE_ALL_IN_ONE = 2;
     private static int RESULT_LOAD_IMAGE = 3;
+    private static final String GLOBAL_SETTINGS = "global_settings";
+    private static final String TIME_THREAD = "time_thread";
     private static int MID_PRE = 10;
     private static int MID_POST = 11;
     private static int MEDIA_TYPE_IMAGE = 12;
@@ -132,6 +135,10 @@ public class MainActivity extends Activity implements
     private Uri  fileUri;
     //Path to show image location
     String picturePath;
+    //Time Added of the image
+    int pictureTime;
+    //Time thread
+    int time_Thread;
     //container to show thumbnail
     RelativeLayout thumbnail_container;
 
@@ -154,6 +161,8 @@ public class MainActivity extends Activity implements
         mQqzoneBtn=(ToggleButton)findViewById(R.id.toggleButton_tencent);
         mTopbar=(Topbar)findViewById(R.id.topbar);
         mImageView=null;
+        picturePath = null;
+        pictureTime = 0;
 
         mSharedBtn.setOnClickListener(this);
         mSharedBtn.setEnabled(false);
@@ -165,7 +174,6 @@ public class MainActivity extends Activity implements
             public boolean onLongClick(View v) {
                 // create Intent to take a picture and return control to the calling application
                 Intent i = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-                ;
                 fileUri = Uri.fromFile(getOutputMediaFile(MEDIA_TYPE_IMAGE)); // create a file to save the image
                 i.putExtra(MediaStore.EXTRA_OUTPUT, fileUri); // set the image file name
 
@@ -292,14 +300,17 @@ public class MainActivity extends Activity implements
         //String[] filePathColumn = {MediaStore.Images.Media.DATA};
         String[] filePathColumn = {MediaStore.Images.Media.DATA,MediaStore.MediaColumns.DATE_ADDED};
         Cursor cursor = getContentResolver().query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, filePathColumn, null, null, null);
-        cursor.moveToLast();
+        cursor.moveToLast();//move to the latest Image added
         int columnIndex0 = cursor.getColumnIndex(filePathColumn[0]);
         int columnIndex1 = cursor.getColumnIndex(filePathColumn[1]);
         final String latest_pic_path = cursor.getString(columnIndex0);
         String str_seconds_before_1970 = cursor.getString(columnIndex1);
-        int int_seconds_before_1970 = Integer.parseInt(str_seconds_before_1970);
+        cursor.close();
+        final int int_seconds_before_1970 = Integer.parseInt(str_seconds_before_1970);
         long time=System.currentTimeMillis()/1000;
-        if((time-int_seconds_before_1970)/3600 <= 1){
+        SharedPreferences globalSettings = getSharedPreferences(GLOBAL_SETTINGS,Context.MODE_PRIVATE);
+        time_Thread = globalSettings.getInt(TIME_THREAD,0);
+        if((time-int_seconds_before_1970)/3600 < 1  && time_Thread < int_seconds_before_1970 && mImageView == null){
             //Toast.makeText(MainActivity.this, "there's image captured within one hour", Toast.LENGTH_SHORT).show();
             Bitmap Image = BitmapFactory.decodeFile(latest_pic_path);
             Bitmap thumb_image = ThumbnailUtils.extractThumbnail(Image, 200, 200);
@@ -321,6 +332,7 @@ public class MainActivity extends Activity implements
                 @Override
                 public void onClick(View v) {
                     picturePath = latest_pic_path;
+                    pictureTime = int_seconds_before_1970;
                     addImage();
                     thumbnail_container.removeAllViews();
                 }
@@ -331,13 +343,15 @@ public class MainActivity extends Activity implements
             RelativeLayout main_content = (RelativeLayout) findViewById(R.id.MainContent);
             main_content.addView(thumbnail_container, lp1);
 
+            saveTimeThread(int_seconds_before_1970);
+
             //显示4s后自动关闭
             new Handler().postDelayed(new Runnable() {
                 public void run() {
                     //delayed method
                     //安卓中的消息处理方式实现延时
                     thumbnail_container.removeAllViews();
-                    thumbnail_container=null;
+                    thumbnail_container = null;
                 }
             }, 4000);
 
@@ -409,17 +423,9 @@ public class MainActivity extends Activity implements
 
         if (requestCode == RESULT_LOAD_IMAGE && null != data) {
             if(resultCode == RESULT_OK ) {
-                Uri selectedImage = data.getData();
-                //electedImage_Uri = selectedImage;
-                String[] filePathColumn = {MediaStore.Images.Media.DATA};
-
-                Cursor cursor = getContentResolver().query(selectedImage,
-                        filePathColumn, null, null, null);
-                cursor.moveToFirst();
-
-                int columnIndex = cursor.getColumnIndex(filePathColumn[0]);
-                picturePath = cursor.getString(columnIndex);
-                cursor.close();
+                Uri selectedImage_uri = data.getData();
+                picturePath =  getRealPathFromURI(selectedImage_uri);
+                pictureTime =  getRealTimeFromURI(selectedImage_uri);
                 addImage();
             }else if(resultCode == RESULT_CANCELED){
                 if(mImageView == null){
@@ -431,6 +437,7 @@ public class MainActivity extends Activity implements
         }else if(requestCode == CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE){
             if (resultCode == RESULT_OK) {
                 picturePath =  getRealPathFromURI(fileUri);
+                pictureTime =  getRealTimeFromURI(fileUri);
                 addImage();
             } else if (resultCode == RESULT_CANCELED) {
                 // User cancelled the image capture
@@ -580,6 +587,8 @@ public class MainActivity extends Activity implements
                         req.message = msg;
                         req.scene = SendMessageToWX.Req.WXSceneTimeline;
                         mWeixinAPI.sendReq(req);
+                        //used to record the thumbnail picture time thread.
+                        saveTimeThread(pictureTime);
 
                         //copy editText into clipboard
                         if("".equals(editText.getText().toString().trim()) == false){
@@ -633,6 +642,9 @@ public class MainActivity extends Activity implements
                                 ee.printStackTrace();
                             }
                             mNotificationManager.cancel(MID_POST);
+                            //used to record the thumbnail picture time thread.
+                            saveTimeThread(pictureTime);
+
                         }
 
                         @Override
@@ -761,6 +773,8 @@ public class MainActivity extends Activity implements
                         ee.printStackTrace();
                     }
                     mNotificationManager.cancel(MID_POST);
+                    //used to record the thumbnail picture time thread.
+                    saveTimeThread(pictureTime);
                 } else {
                     Toast.makeText(MainActivity.this, response, Toast.LENGTH_LONG).show();
                 }
@@ -849,6 +863,35 @@ public class MainActivity extends Activity implements
         return result;
     }
 
+    private int getRealTimeFromURI(Uri contentURI){
+        String result_str;
+        int result;
+        Cursor cursor = getContentResolver().query(contentURI, null, null, null, null);
+        if (cursor == null) { // Source is Dropbox or other similar local file path
+            result = (int)(System.currentTimeMillis()/1000);
+        } else {
+            cursor.moveToFirst();
+            int idx = cursor.getColumnIndex(MediaStore.Images.ImageColumns.DATE_ADDED);
+            result_str = cursor.getString(idx);
+            result = Integer.parseInt(result_str);
+            cursor.close();
+        }
+        return result;
+    }
+
+    public void saveTimeThread(int time){
+        if(time != 0 && (System.currentTimeMillis()/1000-time)/3600 < 1 ){
+            SharedPreferences globalSettings = getSharedPreferences(GLOBAL_SETTINGS,Context.MODE_PRIVATE);
+            if(time  <= globalSettings.getInt(TIME_THREAD,0))
+                return;
+            else{
+                SharedPreferences.Editor Total_editor = globalSettings.edit();
+                Total_editor.putInt(TIME_THREAD, time);
+                Total_editor.commit();
+            }
+        }
+    }
+
     private ImageView addImageView(Bitmap bmp){
         ImageView imageView = new ImageView(this);
         imageView.setImageBitmap(bmp);
@@ -879,6 +922,7 @@ public class MainActivity extends Activity implements
                 mSharedBtn.setEnabled((image_exit || text_exit) ? true : false);
                 mSharedBtn.setBackgroundResource((image_exit || text_exit)? R.drawable.ic_send_green_24:R.drawable.ic_send_grey_24);
                 picturePath = null;//reset picturePath
+                pictureTime = 0;//reset pictureTime
             }
         });
         return imageBtn;
