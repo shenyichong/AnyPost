@@ -3,4 +3,6 @@
     <item type="id" name="image_shower_layout" />
     <item type="id" name="image_selected" />
     <item type="id" name="btn_delete" />
+    <item type="id" name="thumbnail_view" />
+    <item type="id" name="thumbnail_text" />
 </resources>

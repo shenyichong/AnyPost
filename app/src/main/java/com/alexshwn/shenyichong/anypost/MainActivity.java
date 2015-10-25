@@ -35,6 +35,7 @@ import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
 
@@ -135,8 +136,6 @@ public class MainActivity extends Activity implements
     private Uri  fileUri;
     //Path to show image location
     String picturePath;
-    //Time Added of the image
-    int pictureTime;
     //Time thread
     int time_Thread;
     //container to show thumbnail
@@ -149,6 +148,7 @@ public class MainActivity extends Activity implements
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        //Toast.makeText(MainActivity.this, "onCreate", Toast.LENGTH_SHORT).show();
         mAuthInfo = new AuthInfo(this, Constants.APP_KEY, Constants.REDIRECT_URL, Constants.SCOPE);
         mSsoHandler = new SsoHandler(MainActivity.this, mAuthInfo);
 
@@ -162,7 +162,6 @@ public class MainActivity extends Activity implements
         mTopbar=(Topbar)findViewById(R.id.topbar);
         mImageView=null;
         picturePath = null;
-        pictureTime = 0;
 
         mSharedBtn.setOnClickListener(this);
         mSharedBtn.setEnabled(false);
@@ -229,7 +228,7 @@ public class MainActivity extends Activity implements
         mWeiboShareAPI.registerApp();
 
         //通过WXAPIFactory工厂，获取IWXAPI实例
-        mWeixinAPI = WXAPIFactory.createWXAPI(this,Constants.APP_ID,true);
+        mWeixinAPI = WXAPIFactory.createWXAPI(this, Constants.APP_ID, true);
         //将应用注册到微信
         mWeixinAPI.registerApp(Constants.APP_ID);
 
@@ -296,8 +295,7 @@ public class MainActivity extends Activity implements
         imageloader = ImageLoader.getInstance();
         imageloader.init(mUILconfig);
 
-        //content provider
-        //String[] filePathColumn = {MediaStore.Images.Media.DATA};
+//functionality to show thumbnail when there is picture captured within one hour using content provider
         String[] filePathColumn = {MediaStore.Images.Media.DATA,MediaStore.MediaColumns.DATE_ADDED};
         Cursor cursor = getContentResolver().query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, filePathColumn, null, null, null);
         cursor.moveToLast();//move to the latest Image added
@@ -310,37 +308,52 @@ public class MainActivity extends Activity implements
         long time=System.currentTimeMillis()/1000;
         SharedPreferences globalSettings = getSharedPreferences(GLOBAL_SETTINGS,Context.MODE_PRIVATE);
         time_Thread = globalSettings.getInt(TIME_THREAD,0);
-        if((time-int_seconds_before_1970)/3600 < 1  && time_Thread < int_seconds_before_1970 && mImageView == null){
+        if((time-int_seconds_before_1970)/3600 < 1 && time-int_seconds_before_1970 > 3 && time_Thread < int_seconds_before_1970 ){
+            //time-int_seconds_before_1970 > 5 is used to avoid captured picture inApp shown
             //Toast.makeText(MainActivity.this, "there's image captured within one hour", Toast.LENGTH_SHORT).show();
             Bitmap Image = BitmapFactory.decodeFile(latest_pic_path);
-            Bitmap thumb_image = ThumbnailUtils.extractThumbnail(Image, 200, 200);
+            Bitmap thumb_image = ThumbnailUtils.extractThumbnail(Image, 200, 200);//need to be modify later
 
             //add UI component to show thumbnails
             //implement thumbnail imageview itself
             ImageView thumbnail_view = new ImageView(this);
+            thumbnail_view.setId(R.id.thumbnail_view);
             thumbnail_view.setImageBitmap(thumb_image);
             RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.WRAP_CONTENT, RelativeLayout.LayoutParams.WRAP_CONTENT);
+            lp.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
             thumbnail_view.setLayoutParams(lp);
+
+            //add background of thumbnail(including text and background)
+            TextView thumbnail_text = new TextView(this);
+            thumbnail_text.setId(R.id.thumbnail_text);
+            thumbnail_text.setText(R.string.asking_request);
+            thumbnail_text.setTextSize(10f);//need to be modify later
+            RelativeLayout.LayoutParams lp0 = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.WRAP_CONTENT, RelativeLayout.LayoutParams.WRAP_CONTENT);
+            lp0.addRule(RelativeLayout.ALIGN_PARENT_TOP);
+            thumbnail_text.setLayoutParams(lp0);
 
             //implement RelativeLayout of thumbnail container
             thumbnail_container = new RelativeLayout(this);
-            RelativeLayout.LayoutParams lp1 = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.WRAP_CONTENT, RelativeLayout.LayoutParams.WRAP_CONTENT);
+            RelativeLayout.LayoutParams lp1 = new RelativeLayout.LayoutParams(200, 290);//need to be modify later
             lp1.addRule(RelativeLayout.ABOVE,R.id.image_select_button);
             lp1.addRule(RelativeLayout.ALIGN_RIGHT,R.id.image_select_button);
-            lp1.bottomMargin = 40;
+            lp1.bottomMargin = 40;//need to be modify later
+            thumbnail_container.setBackgroundResource(R.drawable.abc_ab_share_pack_mtrl_alpha);
+            //RelativeLayout main_content
+            final RelativeLayout main_content = (RelativeLayout) findViewById(R.id.MainContent);
             thumbnail_container.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     picturePath = latest_pic_path;
-                    pictureTime = int_seconds_before_1970;
                     addImage();
+                    thumbnail_container.setBackgroundResource(0);//delete background resource
                     thumbnail_container.removeAllViews();
+                    main_content.removeView(thumbnail_container);
                 }
             });
             thumbnail_container.addView(thumbnail_view);
-
+            thumbnail_container.addView(thumbnail_text);
             //add thumbnail container into RelativeLayout main_content
-            RelativeLayout main_content = (RelativeLayout) findViewById(R.id.MainContent);
             main_content.addView(thumbnail_container, lp1);
 
             saveTimeThread(int_seconds_before_1970);
@@ -350,18 +363,30 @@ public class MainActivity extends Activity implements
                 public void run() {
                     //delayed method
                     //安卓中的消息处理方式实现延时
+                    thumbnail_container.setBackgroundResource(0);
                     thumbnail_container.removeAllViews();
-                    thumbnail_container = null;
+                    main_content.removeView(thumbnail_container);
                 }
             }, 4000);
 
         }else{
             //Toast.makeText(MainActivity.this, "no images captured within one hour", Toast.LENGTH_SHORT).show();
         }
-
-
-
     }
+
+
+    @Override
+    protected void onStop(){
+        super.onStop();
+        //Toast.makeText(MainActivity.this, "onStop", Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    protected void onDestroy(){
+        super.onDestroy();
+        //Toast.makeText(MainActivity.this, "onDestroy", Toast.LENGTH_SHORT).show();
+    }
+
     @Override
     public boolean onTouchEvent(MotionEvent event){
         this.mDetector.onTouchEvent(event);
@@ -425,7 +450,6 @@ public class MainActivity extends Activity implements
             if(resultCode == RESULT_OK ) {
                 Uri selectedImage_uri = data.getData();
                 picturePath =  getRealPathFromURI(selectedImage_uri);
-                pictureTime =  getRealTimeFromURI(selectedImage_uri);
                 addImage();
             }else if(resultCode == RESULT_CANCELED){
                 if(mImageView == null){
@@ -437,7 +461,6 @@ public class MainActivity extends Activity implements
         }else if(requestCode == CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE){
             if (resultCode == RESULT_OK) {
                 picturePath =  getRealPathFromURI(fileUri);
-                pictureTime =  getRealTimeFromURI(fileUri);
                 addImage();
             } else if (resultCode == RESULT_CANCELED) {
                 // User cancelled the image capture
@@ -587,8 +610,6 @@ public class MainActivity extends Activity implements
                         req.message = msg;
                         req.scene = SendMessageToWX.Req.WXSceneTimeline;
                         mWeixinAPI.sendReq(req);
-                        //used to record the thumbnail picture time thread.
-                        saveTimeThread(pictureTime);
 
                         //copy editText into clipboard
                         if("".equals(editText.getText().toString().trim()) == false){
@@ -597,7 +618,6 @@ public class MainActivity extends Activity implements
                             cmb.setPrimaryClip(cd);
                             Toast.makeText(MainActivity.this, R.string.copy_to_clipboard, Toast.LENGTH_LONG).show();
                         }
-
                     } else {
                         //发送文字朋友圈
                         // 初始化一个WXTextObject对象
@@ -642,8 +662,6 @@ public class MainActivity extends Activity implements
                                 ee.printStackTrace();
                             }
                             mNotificationManager.cancel(MID_POST);
-                            //used to record the thumbnail picture time thread.
-                            saveTimeThread(pictureTime);
 
                         }
 
@@ -727,7 +745,9 @@ public class MainActivity extends Activity implements
             }
         }
         else if(R.id.image_select_button == v.getId()){
-            Intent i = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+            //Intent i = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+            Intent i = new Intent(Intent.ACTION_GET_CONTENT);
+            i.setType("image/*");
             startActivityForResult(i, RESULT_LOAD_IMAGE);
         }
 
@@ -773,8 +793,6 @@ public class MainActivity extends Activity implements
                         ee.printStackTrace();
                     }
                     mNotificationManager.cancel(MID_POST);
-                    //used to record the thumbnail picture time thread.
-                    saveTimeThread(pictureTime);
                 } else {
                     Toast.makeText(MainActivity.this, response, Toast.LENGTH_LONG).show();
                 }
@@ -863,22 +881,6 @@ public class MainActivity extends Activity implements
         return result;
     }
 
-    private int getRealTimeFromURI(Uri contentURI){
-        String result_str;
-        int result;
-        Cursor cursor = getContentResolver().query(contentURI, null, null, null, null);
-        if (cursor == null) { // Source is Dropbox or other similar local file path
-            result = (int)(System.currentTimeMillis()/1000);
-        } else {
-            cursor.moveToFirst();
-            int idx = cursor.getColumnIndex(MediaStore.Images.ImageColumns.DATE_ADDED);
-            result_str = cursor.getString(idx);
-            result = Integer.parseInt(result_str);
-            cursor.close();
-        }
-        return result;
-    }
-
     public void saveTimeThread(int time){
         if(time != 0 && (System.currentTimeMillis()/1000-time)/3600 < 1 ){
             SharedPreferences globalSettings = getSharedPreferences(GLOBAL_SETTINGS,Context.MODE_PRIVATE);
@@ -922,7 +924,6 @@ public class MainActivity extends Activity implements
                 mSharedBtn.setEnabled((image_exit || text_exit) ? true : false);
                 mSharedBtn.setBackgroundResource((image_exit || text_exit)? R.drawable.ic_send_green_24:R.drawable.ic_send_grey_24);
                 picturePath = null;//reset picturePath
-                pictureTime = 0;//reset pictureTime
             }
         });
         return imageBtn;
