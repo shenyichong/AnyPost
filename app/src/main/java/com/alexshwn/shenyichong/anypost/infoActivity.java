@@ -2,6 +2,8 @@ package com.alexshwn.shenyichong.anypost;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.view.Menu;
@@ -37,17 +39,24 @@ public class infoActivity extends Activity {
 
         TextView email = (TextView)findViewById(R.id.email_address);
         final TextView github_addr = (TextView)findViewById(R.id.github_address);
+        final TextView download_addr = (TextView)findViewById(R.id.download_address);
+        TextView version_name = (TextView)findViewById(R.id.version_name);
+        try {
+            version_name.setText("version "+getVersionName());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
         email.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent send = new Intent(Intent.ACTION_SENDTO);
+                Intent intent = new Intent(Intent.ACTION_SENDTO);
                 String uriText = "mailto:" + Uri.encode("shenyichong2011@gmail.com") +
                         "?subject=" + Uri.encode("[AnyPost bug 反馈]") +
                         "&body=" + Uri.encode("反馈信息：");
                 Uri uri = Uri.parse(uriText);
-                send.setData(uri);
-                startActivity(Intent.createChooser(send, "发送反馈邮件"));
+                intent.setData(uri);
+                startActivity(Intent.createChooser(intent, "发送反馈邮件"));
             }
         });
 
@@ -56,9 +65,23 @@ public class infoActivity extends Activity {
             public void onClick(View v) {
                 Uri uri = Uri.parse(github_addr.getText().toString());
                 Intent intent = new Intent(Intent.ACTION_VIEW,uri);
-                startActivity(intent);
+                //startActivity(intent);
+                intent.setData(uri);
+                startActivity(Intent.createChooser(intent, "访问项目github地址"));
             }
         });
+
+        download_addr.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Uri uri = Uri.parse(download_addr.getText().toString());
+                Intent intent = new Intent(Intent.ACTION_VIEW,uri);
+                intent.setData(uri);
+                startActivity(Intent.createChooser(intent, "访问AnyPost最新下载地址"));
+            }
+        });
+
+
     }
 
     @Override
@@ -81,5 +104,15 @@ public class infoActivity extends Activity {
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    private String getVersionName() throws Exception
+    {
+        // 获取packagemanager的实例
+        PackageManager packageManager = getPackageManager();
+        // getPackageName()是你当前类的包名，0代表是获取版本信息
+        PackageInfo packInfo = packageManager.getPackageInfo(getPackageName(),0);
+        String version = packInfo.versionName;
+        return version;
     }
 }

@@ -805,7 +805,7 @@ public class MainActivity extends Activity implements
             ErrorInfo info = ErrorInfo.parse(e.getMessage());
             NotificationCompat.Builder mBuilder;
             //if weibo access token expired, reauthorization needed.
-            if(info.error_code.equals("21332".toString())){
+            if(info.error_code.equals("21332".toString()) || info.error_code.equals("21327".toString()) ){
                 //在通知栏显示AnyPost发布失败，提示需要进行重新授权并调起授权页面。
                 mBuilder = new NotificationCompat.Builder(MainActivity.this)
                         .setSmallIcon(R.drawable.ic_launcher)

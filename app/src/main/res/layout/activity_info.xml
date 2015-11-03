@@ -69,4 +69,39 @@
         android:layout_marginLeft="20dp"
         android:textSize="18sp"
         android:text="https://github.com/shenyichong/anypost"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/download_title"
+        android:layout_alignParentLeft="true"
+        android:layout_below="@+id/github_address"
+        android:layout_marginTop="20dp"
+        android:layout_marginLeft="15dp"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:text="最新版本下载地址："/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/download_address"
+        android:layout_alignParentLeft="true"
+        android:layout_below="@+id/download_title"
+        android:layout_marginTop="10dp"
+        android:layout_marginLeft="20dp"
+        android:textSize="18sp"
+        android:text="http://fir.im/AnyPost"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="New Text"
+        android:id="@+id/version_name"
+        android:layout_alignParentBottom="true"
+        android:layout_marginBottom="16dp"
+        android:layout_alignParentRight="true"
+        android:layout_marginRight="16dp"
+        android:layout_alignParentEnd="true" />
+
 </RelativeLayout>
